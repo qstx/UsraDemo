@@ -1,0 +1,108 @@
+{
+  "activeCamera": "75727361-0000-0000-0200-000000000104",
+  "ambient": {
+    "color": [
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "intensity": 0.10000000149011612
+  },
+  "format": "UrsaScene",
+  "id": "75727361-0000-0000-0300-000000000002",
+  "instances": [
+    {
+      "id": "75727361-0000-0000-0300-000000000003",
+      "overrides": {},
+      "parent": "75727361-0000-0000-0100-000000000001",
+      "prefab": "75727361-0000-0000-0300-000000000001"
+    }
+  ],
+  "nodes": [
+    {
+      "components": [
+        {
+          "data": {
+            "smokeGameplay": false,
+            "stressWindow": false
+          },
+          "enabled": true,
+          "id": "75727361-0000-0000-0200-000000000001",
+          "type": "demo.SnakeController",
+          "version": 1
+        },
+        {
+          "data": {
+            "root": "75727361-0000-0000-0100-000000000001",
+            "smokeGameplay": false
+          },
+          "enabled": true,
+          "id": "75727361-0000-0000-0200-000000000002",
+          "type": "demo.SnakePresentation",
+          "version": 1
+        }
+      ],
+      "enabled": true,
+      "id": "75727361-0000-0000-0100-000000000001",
+      "label": "Snake Game",
+      "parent": null,
+      "transform": {
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "components": [
+        {
+          "data": {
+            "farPlane": 100.0,
+            "nearPlane": 0.10000000149011612,
+            "verticalFovRadians": 0.7853981852531433
+          },
+          "enabled": true,
+          "id": "75727361-0000-0000-0200-000000000104",
+          "type": "ursa.Camera",
+          "version": 1
+        }
+      ],
+      "enabled": true,
+      "id": "75727361-0000-0000-0100-000000000104",
+      "label": "Game Camera",
+      "parent": "75727361-0000-0000-0100-000000000001",
+      "transform": {
+        "position": [
+          0.0,
+          14.399999618530273,
+          18.399999618530273
+        ],
+        "rotation": [
+          -0.3259562849998474,
+          -0.0,
+          -0.0,
+          0.9453848600387573
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    }
+  ],
+  "version": 1
+}
