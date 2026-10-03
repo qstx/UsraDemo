@@ -1,6 +1,7 @@
 #pragma once
 #include <serialization/ComponentRegistry.hpp>
 
-namespace ursa::demo {
-Result<void> registerSnakeComponents(ComponentRegistry &registry);
-} // namespace ursa::demo
+namespace Ursa::Demo
+{
+Result<void> RegisterSnakeComponents(ComponentRegistry& registry);
+} // namespace Ursa::Demo

@@ -2,66 +2,98 @@
 #include "SnakeController.hpp"
 #include <array>
 
-namespace ursa::demo {
-SnakeController::SnakeController(SnakeGame &game, bool stressWindow, bool smokeGameplay)
-    : game_(game), stressWindow_(stressWindow), smokeGameplay_(smokeGameplay) {
+namespace Ursa::Demo
+{
+SnakeController::SnakeController(SnakeGame& game, bool stressWindow, bool smokeGameplay)
+    : game(game), stressWindow(stressWindow), smokeGameplay(smokeGameplay)
+{
 }
 
-Result<void> SnakeController::onUpdate(const FrameContext &context) {
-    ++frame_;
-    if (stressWindow_ && frame_ == 5)
-        context.window->resize(800, 600);
-    if (stressWindow_ && frame_ == 10) {
-        context.window->minimize();
-        context.window->restore();
-    }
-    if (context.input.keyDown(Key::Escape))
-        context.window->requestClose();
-    readInput(context);
-    if (smokeGameplay_)
-        return runSmokeStep();
-    return {};
+Result<void> SnakeController::OnUpdate(const FrameContext& context)
+{
+	++frame;
+	if (stressWindow && frame == 5)
+	{
+		context.window->Resize(800, 600);
+	}
+	if (stressWindow && frame == 10)
+	{
+		context.window->Minimize();
+		context.window->Restore();
+	}
+	if (context.input.KeyDown(Key::escape))
+	{
+		context.window->RequestClose();
+	}
+	ReadInput(context);
+	if (smokeGameplay)
+	{
+		return RunSmokeStep();
+	}
+	return {};
 }
 
-Result<void> SnakeController::onFixedUpdate(const FrameContext &context) {
-    if (!smokeGameplay_)
-        for (int step = 0, count = clock_.advance(context.fixedDeltaSeconds); step < count; ++step)
-            game_.step();
-    return {};
+Result<void> SnakeController::OnFixedUpdate(const FrameContext& context)
+{
+	if (!smokeGameplay)
+	{
+		for (int step = 0, count = clock.Advance(context.fixedDeltaSeconds); step < count; ++step)
+		{
+			game.Step();
+		}
+	}
+	return {};
 }
 
-void SnakeController::readInput(const FrameContext &context) {
-    const ursa::Array<Key, 8> keys{Key::Up, Key::W, Key::Down, Key::S, Key::Left, Key::A, Key::Right, Key::D};
-    const ursa::Array<Direction, 8> directions{Direction::Up,   Direction::Up,   Direction::Down,  Direction::Down,
-                                               Direction::Left, Direction::Left, Direction::Right, Direction::Right};
-    for (size_t i = 0; i < keys.size(); ++i) {
-        const bool down = context.input.keyDown(keys[i]);
-        if (down && !previousKeys_[i])
-            game_.queueDirection(directions[i]);
-        previousKeys_[i] = down;
-    }
-    const bool space = context.input.keyDown(Key::Space);
-    if (space && !previousSpace_) {
-        game_.reset();
-        clock_.reset();
-    }
-    previousSpace_ = space;
+void SnakeController::ReadInput(const FrameContext& context)
+{
+	const Ursa::Array<Key, 8> keys{Key::up, Key::w, Key::down, Key::s, Key::left, Key::a, Key::right, Key::d};
+	const Ursa::Array<Direction, 8> directions{Direction::up,   Direction::up,   Direction::down,  Direction::down,
+	                                           Direction::left, Direction::left, Direction::right, Direction::right};
+	for (size_t i = 0; i < keys.size(); ++i)
+	{
+		const bool down = context.input.KeyDown(keys[i]);
+		if (down && !previousKeys[i])
+		{
+			game.QueueDirection(directions[i]);
+		}
+		previousKeys[i] = down;
+	}
+	const bool space = context.input.KeyDown(Key::space);
+	if (space && !previousSpace)
+	{
+		game.Reset();
+		clock.Reset();
+	}
+	previousSpace = space;
 }
 
-Result<void> SnakeController::runSmokeStep() {
-    if (frame_ == 1) {
-        game_.step();
-        if (game_.score() != 1)
-            return Result<void>::failure("Smoke game did not eat initial food");
-    } else if (frame_ == 2 || frame_ == 3) {
-        game_.step();
-        if (frame_ == 3 && game_.status() != GameStatus::Lost)
-            return Result<void>::failure("Smoke game did not reach game over");
-    } else if (frame_ == 4) {
-        game_.reset();
-        if (game_.status() != GameStatus::Running || game_.score() != 0)
-            return Result<void>::failure("Smoke game did not restart");
-    }
-    return {};
+Result<void> SnakeController::RunSmokeStep()
+{
+	if (frame == 1)
+	{
+		game.Step();
+		if (game.GetScore() != 1)
+		{
+			return Result<void>::Failure("Smoke game did not eat initial food");
+		}
+	}
+	else if (frame == 2 || frame == 3)
+	{
+		game.Step();
+		if (frame == 3 && game.GetStatus() != GameStatus::lost)
+		{
+			return Result<void>::Failure("Smoke game did not reach game over");
+		}
+	}
+	else if (frame == 4)
+	{
+		game.Reset();
+		if (game.GetStatus() != GameStatus::running || game.GetScore() != 0)
+		{
+			return Result<void>::Failure("Smoke game did not restart");
+		}
+	}
+	return {};
 }
-} // namespace ursa::demo
+} // namespace Ursa::Demo

@@ -13,6 +13,16 @@ endif()
 enable_testing()
 add_subdirectory("${URSA_ENGINE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/Engine")
 
+if(WIN32)
+  add_custom_target(UrsaDemoFormatCheck
+    COMMAND powershell.exe -NoProfile -ExecutionPolicy Bypass
+      -File "${CMAKE_CURRENT_SOURCE_DIR}/tools/format.ps1" -Check
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    VERBATIM)
+  add_custom_target(UrsaFormatCheck DEPENDS UrsaEngineFormatCheck UrsaDemoFormatCheck)
+  set_target_properties(UrsaDemoFormatCheck UrsaFormatCheck PROPERTIES FOLDER "Tools")
+endif()
+
 add_executable(UrsaEngineHeaderSmoke tests/integration/EngineHeaderSmoke.cpp)
 target_link_libraries(UrsaEngineHeaderSmoke PRIVATE Ursa::Engine)
 add_test(NAME UrsaEngineHeaderSmoke COMMAND UrsaEngineHeaderSmoke)

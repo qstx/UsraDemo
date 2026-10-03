@@ -4,42 +4,48 @@
 #include <scene/Component.hpp>
 #include <array>
 
-namespace ursa::demo {
-class SnakeController final : public Component {
+namespace Ursa::Demo
+{
+class SnakeController final : public Component
+{
 public:
-    SnakeController(SnakeGame &game, bool stressWindow, bool smokeGameplay);
+	SnakeController(SnakeGame& game, bool stressWindow, bool smokeGameplay);
 
-    Result<void> onUpdate(const FrameContext &context) override;
+	Result<void> OnUpdate(const FrameContext& context) override;
 
-    Result<void> onFixedUpdate(const FrameContext &context) override;
+	Result<void> OnFixedUpdate(const FrameContext& context) override;
 
-    bool stressWindow() const {
-        return stressWindow_;
-    }
+	bool StressWindow() const
+	{
+		return stressWindow;
+	}
 
-    bool smokeGameplay() const {
-        return smokeGameplay_;
-    }
+	bool SmokeGameplay() const
+	{
+		return smokeGameplay;
+	}
 
-    void setStressWindow(bool value) {
-        stressWindow_ = value;
-    }
+	void SetStressWindow(bool value)
+	{
+		stressWindow = value;
+	}
 
-    void setSmokeGameplay(bool value) {
-        smokeGameplay_ = value;
-    }
+	void SetSmokeGameplay(bool value)
+	{
+		smokeGameplay = value;
+	}
 
 private:
-    Result<void> runSmokeStep();
+	Result<void> RunSmokeStep();
 
-    void readInput(const FrameContext &context);
+	void ReadInput(const FrameContext& context);
 
-    SnakeGame &game_;
-    FixedStepClock clock_;
-    ursa::Array<bool, 8> previousKeys_{};
-    uint32_t frame_ = 0;
-    bool stressWindow_ = false;
-    bool smokeGameplay_ = false;
-    bool previousSpace_ = false;
+	SnakeGame& game;
+	FixedStepClock clock;
+	Ursa::Array<bool, 8> previousKeys{};
+	uint32_t frame = 0;
+	bool stressWindow = false;
+	bool smokeGameplay = false;
+	bool previousSpace = false;
 };
-} // namespace ursa::demo
+} // namespace Ursa::Demo

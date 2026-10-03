@@ -6,75 +6,92 @@
 #include <random>
 #include <vector>
 
-namespace ursa::demo {
-struct Cell {
-    int x = 0;
-    int z = 0;
+namespace Ursa::Demo
+{
+struct Cell
+{
+	int x = 0;
+	int z = 0;
 
-    bool operator==(Cell other) const {
-        return x == other.x && z == other.z;
-    }
+	bool operator==(Cell other) const
+	{
+		return x == other.x && z == other.z;
+	}
 };
 
-enum class Direction { Up, Down, Left, Right };
-enum class GameStatus { Running, Lost, Won };
-
-struct SnakeConfig {
-    int width = 16;
-    int height = 16;
-    uint32_t seed = 1;
-    ursa::Vector<Cell> initialBody;
-    Direction initialDirection = Direction::Right;
-    std::optional<Cell> initialFood;
+enum class Direction
+{
+	up,
+	down,
+	left,
+	right
+};
+enum class GameStatus
+{
+	running,
+	lost,
+	won
 };
 
-class FixedStepClock {
+struct SnakeConfig
+{
+	int width = 16;
+	int height = 16;
+	uint32_t seed = 1;
+	Ursa::Vector<Cell> initialBody;
+	Direction initialDirection = Direction::right;
+	std::optional<Cell> initialFood;
+};
+
+class FixedStepClock
+{
 public:
-    explicit FixedStepClock(double intervalSeconds = 0.18);
+	explicit FixedStepClock(double intervalSeconds = 0.18);
 
-    int advance(double deltaSeconds);
+	int Advance(double deltaSeconds);
 
-    void reset();
+	void Reset();
 
 private:
-    double interval_;
-    double accumulated_ = 0.0;
+	double interval;
+	double accumulated = 0.0;
 };
 
-class SnakeGame {
+class SnakeGame
+{
 public:
-    explicit SnakeGame(SnakeConfig config = {});
+	explicit SnakeGame(SnakeConfig config = {});
 
-    void reset();
+	void Reset();
 
-    void queueDirection(Direction direction);
+	void QueueDirection(Direction direction);
 
-    void step();
+	void Step();
 
-    int width() const;
+	int GetWidth() const;
 
-    int height() const;
+	int GetHeight() const;
 
-    const ursa::Deque<Cell> &body() const;
+	const Ursa::Deque<Cell>& GetBody() const;
 
-    std::optional<Cell> food() const;
+	std::optional<Cell> GetFood() const;
 
-    Direction direction() const;
+	Direction GetDirection() const;
 
-    GameStatus status() const;
+	GameStatus GetStatus() const;
 
-    int score() const;
+	int GetScore() const;
 
 private:
-    void spawnFood();
+	void SpawnFood();
 
-    SnakeConfig config_;
-    std::mt19937 random_;
-    ursa::Deque<Cell> body_;
-    std::optional<Cell> food_;
-    std::optional<Direction> pendingDirection_;
-    Direction direction_ = Direction::Right;
-    GameStatus status_ = GameStatus::Running;
-    int score_ = 0;
+	SnakeConfig config;
+	std::mt19937 random;
+	Ursa::Deque<Cell> body;
+	std::optional<Cell> food;
+	std::optional<Direction> pendingDirection;
+	Direction direction = Direction::right;
+	GameStatus status = GameStatus::running;
+	int score = 0;
 };
-} // namespace ursa::demo
+} // namespace Ursa::Demo

@@ -5,51 +5,59 @@
 #include <string>
 #include <vector>
 
-namespace ursa::demo {
-class SnakePresentation final : public Component {
+namespace Ursa::Demo
+{
+class SnakePresentation final : public Component
+{
 public:
-    SnakePresentation(SnakeGame &game, NodeId root, bool smokeGameplay);
+	SnakePresentation(SnakeGame& game, NodeId root, bool smokeGameplay);
 
-    Result<void> onLateUpdate(const FrameContext &context) override;
+	Result<void> OnLateUpdate(const FrameContext& context) override;
 
-    const ursa::Vector<NodeId> &segments() const {
-        return segments_;
-    }
+	const Ursa::Vector<NodeId>& Segments() const
+	{
+		return segments;
+	}
 
-    NodeId foodNode() const {
-        return foodNode_;
-    }
+	NodeId FoodNode() const
+	{
+		return foodNode;
+	}
 
-    NodeId rootNode() const {
-        return root_;
-    }
+	NodeId RootNode() const
+	{
+		return root;
+	}
 
-    bool smokeGameplay() const {
-        return smokeGameplay_;
-    }
+	bool SmokeGameplay() const
+	{
+		return smokeGameplay;
+	}
 
-    void setRootNode(NodeId root) {
-        root_ = root;
-    }
+	void SetRootNode(NodeId root)
+	{
+		this->root = root;
+	}
 
-    void setSmokeGameplay(bool value) {
-        smokeGameplay_ = value;
-    }
+	void SetSmokeGameplay(bool value)
+	{
+		smokeGameplay = value;
+	}
 
 private:
-    Result<void> syncBody();
+	Result<void> SyncBody();
 
-    Result<void> syncFood();
+	Result<void> SyncFood();
 
-    void updateTitle(Window *window);
+	void UpdateTitle(Window* window);
 
-    LocalTransform cellTransform(Cell cell, float height, float size) const;
+	LocalTransform CellTransform(Cell cell, float height, float size) const;
 
-    SnakeGame &game_;
-    NodeId root_;
-    ursa::Vector<NodeId> segments_;
-    NodeId foodNode_;
-    String title_;
-    bool smokeGameplay_ = false;
+	SnakeGame& game;
+	NodeId root;
+	Ursa::Vector<NodeId> segments;
+	NodeId foodNode;
+	String title;
+	bool smokeGameplay = false;
 };
-} // namespace ursa::demo
+} // namespace Ursa::Demo

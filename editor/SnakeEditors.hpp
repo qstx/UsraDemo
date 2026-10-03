@@ -2,6 +2,7 @@
 
 #include <scene/ComponentEditors.hpp>
 
-namespace ursa::demo {
-Result<void> registerSnakeEditors(editor::ComponentEditors &editors);
-} // namespace ursa::demo
+namespace Ursa::Demo
+{
+Result<void> RegisterSnakeEditors(Editor::ComponentEditors& editors);
+} // namespace Ursa::Demo

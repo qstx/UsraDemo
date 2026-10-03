@@ -5,8 +5,9 @@
 #include <vector>
 #include <scene/Scene.hpp>
 
-namespace ursa::demo {
-ursa::Vector<BoxInstance> buildSnakeScene(const SnakeGame &game);
+namespace Ursa::Demo
+{
+Ursa::Vector<BoxInstance> BuildSnakeScene(const SnakeGame& game);
 
-Result<void> setupSnakeScene(Scene &scene, SnakeGame &game, bool stressWindow = false, bool smokeGameplay = false);
-} // namespace ursa::demo
+Result<void> SetupSnakeScene(Scene& scene, SnakeGame& game, bool stressWindow = false, bool smokeGameplay = false);
+} // namespace Ursa::Demo

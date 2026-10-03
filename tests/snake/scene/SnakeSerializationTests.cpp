@@ -8,138 +8,168 @@
 #include <iostream>
 #include <stdexcept>
 
-namespace {
-template <class T> T take(ursa::Result<T> result) {
-    if (!result)
-        throw std::runtime_error(ursa::toStdString(result.error));
-    return std::move(result.value);
+namespace
+{
+template <class T> T Take(Ursa::Result<T> result)
+{
+	if (!result)
+	{
+		throw std::runtime_error(Ursa::ToStdString(result.error));
+	}
+	return std::move(result.value);
 }
 
-void done(ursa::Result<void> result) {
-    if (!result)
-        throw std::runtime_error(ursa::toStdString(result.error));
+void done(Ursa::Result<void> result)
+{
+	if (!result)
+	{
+		throw std::runtime_error(Ursa::ToStdString(result.error));
+	}
 }
 
-void expect(bool condition, const char *message) {
-    if (!condition)
-        throw std::runtime_error(message);
+void Expect(bool condition, const char* message)
+{
+	if (!condition)
+	{
+		throw std::runtime_error(message);
+	}
 }
 
-void loadSnake(const std::filesystem::path &file, ursa::ResourceSession &resources, ursa::demo::SnakeGame &game) {
-    ursa::ComponentRegistry registry;
-    if (!ursa::registerBuiltinComponents(registry) || !ursa::demo::registerSnakeComponents(registry))
-        return;
-    ursa::ComponentLoadContext context(resources);
-    context.provide(game);
-    auto scene = ursa::loadSceneResource(file, registry, context);
+void LoadSnake(const std::filesystem::path& file, Ursa::ResourceSession& resources, Ursa::Demo::SnakeGame& game)
+{
+	Ursa::ComponentRegistry registry;
+	if (!Ursa::RegisterBuiltinComponents(registry) || !Ursa::Demo::RegisterSnakeComponents(registry))
+	{
+		return;
+	}
+	Ursa::ComponentLoadContext context(resources);
+	context.Provide(game);
+	auto scene = Ursa::LoadSceneResource(file, registry, context);
 }
 
-void moveTile(ursa::LinkedSceneResource &level, const std::filesystem::path &scenePath,
-              ursa::ComponentRegistry &registry, ursa::ComponentLoadContext &context, ursa::ResourceId instanceId,
-              ursa::ResourceId tileNodeId) {
-    if (!ursa::setPrefabPropertyOverride(level, instanceId, tileNodeId, "/transform/position/0", 3.0f) ||
-        !ursa::saveLinkedSceneResource(scenePath, level, registry))
-        return;
-    if (!ursa::reloadLinkedSceneResource(scenePath, registry, context, level))
-        return;
-    if (!ursa::clearPrefabPropertyOverride(level, instanceId, tileNodeId, "/transform/position/0") ||
-        !ursa::saveLinkedSceneResource(scenePath, level, registry))
-        return;
-    ursa::reloadLinkedSceneResource(scenePath, registry, context, level);
+void MoveTile(Ursa::LinkedSceneResource& level, const std::filesystem::path& scenePath,
+              Ursa::ComponentRegistry& registry, Ursa::ComponentLoadContext& context, Ursa::ResourceId instanceId,
+              Ursa::ResourceId tileNodeId)
+{
+	if (!Ursa::SetPrefabPropertyOverride(level, instanceId, tileNodeId, "/transform/position/0", 3.0f) ||
+	    !Ursa::SaveLinkedSceneResource(scenePath, level, registry))
+	{
+		return;
+	}
+	if (!Ursa::ReloadLinkedSceneResource(scenePath, registry, context, level))
+	{
+		return;
+	}
+	if (!Ursa::ClearPrefabPropertyOverride(level, instanceId, tileNodeId, "/transform/position/0") ||
+	    !Ursa::SaveLinkedSceneResource(scenePath, level, registry))
+	{
+		return;
+	}
+	Ursa::ReloadLinkedSceneResource(scenePath, registry, context, level);
 }
 
-struct CleanupCount {
-    int value = 0;
+struct CleanupCount
+{
+	int value = 0;
 };
 
-class CleanupComponent final : public ursa::Component {
+class CleanupComponent final : public Ursa::Component
+{
 public:
-    CleanupComponent(ursa::demo::SnakeGame &game, CleanupCount &count) : game_(game), count_(count) {
-    }
+	CleanupComponent(Ursa::Demo::SnakeGame& game, CleanupCount& count) : game(game), count(count)
+	{
+	}
 
-    void onRemove() override {
-        ++count_.value;
-    }
+	void OnRemove() override
+	{
+		++count.value;
+	}
 
 private:
-    ursa::demo::SnakeGame &game_;
-    CleanupCount &count_;
+	Ursa::Demo::SnakeGame& game;
+	CleanupCount& count;
 };
 
-void registerCleanup(ursa::ComponentRegistry &registry) {
-    ursa::ComponentCodec codec;
-    codec.type = "test.SnakeCleanup";
-    codec.matches = [](const ursa::Component &component) {
-        return dynamic_cast<const CleanupComponent *>(&component) != nullptr;
-    };
-    codec.save = [](const ursa::Component &, const ursa::ComponentSaveContext &) {
-        return ursa::Result<nlohmann::json>::success(nlohmann::json::object());
-    };
-    codec.create = [](ursa::Scene &scene, ursa::NodeId node, const nlohmann::json &,
-                      ursa::ComponentLoadContext &context) {
-        auto game = context.service<ursa::demo::SnakeGame>();
-        auto count = context.service<CleanupCount>();
-        if (!game || !count)
-            return ursa::Result<ursa::ComponentId>::failure(!game ? game.error : count.error);
-        return scene.addComponent<CleanupComponent>(node, *game.value, *count.value);
-    };
-    done(registry.registerCodec(std::move(codec)));
+void RegisterCleanup(Ursa::ComponentRegistry& registry)
+{
+	Ursa::ComponentCodec codec;
+	codec.type = "test.SnakeCleanup";
+	codec.matches = [](const Ursa::Component& component)
+	{ return dynamic_cast<const CleanupComponent*>(&component) != nullptr; };
+	codec.save = [](const Ursa::Component&, const Ursa::ComponentSaveContext&)
+	{ return Ursa::Result<nlohmann::json>::Success(nlohmann::json::object()); };
+	codec.create = [](Ursa::Scene& scene, Ursa::NodeId node, const nlohmann::json&, Ursa::ComponentLoadContext& context)
+	{
+		auto game = context.Service<Ursa::Demo::SnakeGame>();
+		auto count = context.Service<CleanupCount>();
+		if (!game || !count)
+		{
+			return Ursa::Result<Ursa::ComponentId>::Failure(!game ? game.error : count.error);
+		}
+		return scene.AddComponent<CleanupComponent>(node, *game.value, *count.value);
+	};
+	done(registry.RegisterCodec(std::move(codec)));
 }
 
-void test(const std::filesystem::path &root) {
-    ursa::demo::SnakeConfig config;
-    config.width = config.height = 4;
-    config.initialBody = {{1, 1}, {0, 1}};
-    config.initialFood = ursa::demo::Cell{2, 1};
-    ursa::demo::SnakeGame game(config);
-    CleanupCount cleanup;
-    ursa::ComponentRegistry registry;
-    done(ursa::registerBuiltinComponents(registry));
-    done(ursa::demo::registerSnakeComponents(registry));
-    registerCleanup(registry);
-    ursa::Scene source;
-    done(ursa::demo::setupSnakeScene(source, game, false, false));
-    take(source.addComponent<CleanupComponent>(source.rootNodes()[0], game, cleanup));
-    const auto path = root / "snake.ursascene";
-    done(ursa::saveSceneResource(path, ursa::ResourceId::generate(), source, registry));
-    auto session = take(ursa::ResourceSession::open({root}));
-    loadSnake(path, *session, game);
-    ursa::ComponentLoadContext context(*session);
-    context.provide(game);
-    context.provide(cleanup);
-    auto loaded = take(ursa::loadSceneResource(path, registry, context));
-    auto *controller = loaded.scene->findComponent<ursa::demo::SnakeController>(loaded.scene->rootNodes()[0]);
-    expect(controller && !controller->stressWindow() && !controller->smokeGameplay(),
-           "Snake controller fields were not restored");
-    loaded.scene->beginFrame();
-    done(loaded.scene->update({}));
-    ursa::FrameContext frame;
-    frame.fixedDeltaSeconds = 0.2f;
-    done(loaded.scene->fixedUpdate(frame));
-    done(loaded.scene->lateUpdate({}));
-    expect(game.score() == 1, "Restored Snake controller did not advance the bound game");
-    const int before = cleanup.value;
-    loaded.scene->clear();
-    expect(cleanup.value == before + 1, "Restored component cleanup callback was not called once");
-    ursa::ComponentLoadContext missingContext(*session);
-    missingContext.provide(cleanup);
-    auto missing = ursa::loadSceneResource(path, registry, missingContext);
-    expect(!missing && missing.error.find("Missing runtime service") != ursa::String::npos,
-           "Missing SnakeGame dependency was accepted");
-    std::filesystem::remove(path);
+void Test(const std::filesystem::path& root)
+{
+	Ursa::Demo::SnakeConfig config;
+	config.width = config.height = 4;
+	config.initialBody = {{1, 1}, {0, 1}};
+	config.initialFood = Ursa::Demo::Cell{2, 1};
+	Ursa::Demo::SnakeGame game(config);
+	CleanupCount cleanup;
+	Ursa::ComponentRegistry registry;
+	done(Ursa::RegisterBuiltinComponents(registry));
+	done(Ursa::Demo::RegisterSnakeComponents(registry));
+	RegisterCleanup(registry);
+	Ursa::Scene source;
+	done(Ursa::Demo::SetupSnakeScene(source, game, false, false));
+	Take(source.AddComponent<CleanupComponent>(source.RootNodes()[0], game, cleanup));
+	const auto path = root / "snake.ursascene";
+	done(Ursa::SaveSceneResource(path, Ursa::ResourceId::Generate(), source, registry));
+	auto session = Take(Ursa::ResourceSession::Open({root}));
+	LoadSnake(path, *session, game);
+	Ursa::ComponentLoadContext context(*session);
+	context.Provide(game);
+	context.Provide(cleanup);
+	auto loaded = Take(Ursa::LoadSceneResource(path, registry, context));
+	auto* controller = loaded.scene->FindComponent<Ursa::Demo::SnakeController>(loaded.scene->RootNodes()[0]);
+	Expect(controller && !controller->StressWindow() && !controller->SmokeGameplay(),
+	       "Snake controller fields were not restored");
+	loaded.scene->BeginFrame();
+	done(loaded.scene->Update({}));
+	Ursa::FrameContext frame;
+	frame.fixedDeltaSeconds = 0.2f;
+	done(loaded.scene->FixedUpdate(frame));
+	done(loaded.scene->LateUpdate({}));
+	Expect(game.GetScore() == 1, "Restored Snake controller did not advance the bound game");
+	const int before = cleanup.value;
+	loaded.scene->Clear();
+	Expect(cleanup.value == before + 1, "Restored component cleanup callback was not called once");
+	Ursa::ComponentLoadContext missingContext(*session);
+	missingContext.Provide(cleanup);
+	auto missing = Ursa::LoadSceneResource(path, registry, missingContext);
+	Expect(!missing && missing.error.find("Missing runtime service") != Ursa::String::npos,
+	       "Missing SnakeGame dependency was accepted");
+	std::filesystem::remove(path);
 }
 } // namespace
 
-int main() {
-    try {
-        const auto root = std::filesystem::temp_directory_path() /
-                          ("UrsaSnakeSerializationTests-" + ursa::toStdString(ursa::ResourceId::generate().toString()));
-        std::filesystem::create_directory(root);
-        test(root);
-        std::filesystem::remove(root);
-        return 0;
-    } catch (const std::exception &error) {
-        std::cerr << error.what() << '\n';
-        return 1;
-    }
+int main()
+{
+	try
+	{
+		const auto root = std::filesystem::temp_directory_path() /
+		                  ("UrsaSnakeSerializationTests-" + Ursa::ToStdString(Ursa::ResourceId::Generate().ToString()));
+		std::filesystem::create_directory(root);
+		Test(root);
+		std::filesystem::remove(root);
+		return 0;
+	}
+	catch (const std::exception& error)
+	{
+		std::cerr << error.what() << '\n';
+		return 1;
+	}
 }

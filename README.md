@@ -2,6 +2,10 @@
 
 UrsaDemo contains a playable 3D Snake game and a material showcase. Both build against the sibling UrsaEngine repository, link to `Ursa::Engine`, and use its public API.
 
+First-party C++ follows the repository `.clang-format` and `.editorconfig` rules, shared with Engine. Run `tools/format.ps1` to format Demo sources or `tools/format.ps1 -Check` to verify them; pass `-ClangFormatPath` if needed. The conventions and compatibility boundary are documented in Engine's `CODING_STYLE.md`.
+
+From a configured Demo build, `cmake --build build --config Debug --target UrsaFormatCheck` checks the Engine and Demo C++ sources without changing them.
+
 ## Source layout
 
 `snake/` contains the game entry point, with rules and scene code in `snake/game/` and `snake/scene/`; `material/` contains the material showcase entry point. Each header sits beside its source file. Tests are grouped by feature under `tests/`.
@@ -33,9 +37,9 @@ Use `-DURSA_ENGINE_DIR="C:/path/to/Engine"` at configure time if the engine chec
 
 ## Logs
 
-The Snake game, material showcase, and Demo Editor initialize Runtime logging before opening a window. Debug builds record Debug and higher; Release builds record Info and higher. Messages go to the console and to `logs/<program>.log` beside each executable, with a 5 MiB current file and three rotated backups. For example, a Debug build writes `out/build/Debug/logs/UrsaSnake.log`. The Editor log stays outside `assets/`, so it does not appear in the Project resource browser. Use `ursa::Log::setLevel` to change the minimum level while running, or pass a `LogConfig` to `LogSession` to change the level, file path, and rotation limits. The Engine README documents the public API and each level's meaning.
+The Snake game, material showcase, and Demo Editor initialize Runtime logging before opening a window. Debug builds record Debug and higher; Release builds record Info and higher. Messages go to the console and to `logs/<program>.log` beside each executable, with a 5 MiB current file and three rotated backups. For example, a Debug build writes `out/build/Debug/logs/UrsaSnake.log`. The Editor log stays outside `assets/`, so it does not appear in the Project resource browser. Use `Ursa::Log::setLevel` to change the minimum level while running, or pass a `LogConfig` to `LogSession` to change the level, file path, and rotation limits. The Engine README documents the public API and each level's meaning.
 
-Engine collection and text APIs now use `ursa::Vector`, `ursa::Array`, `ursa::Deque`, and `ursa::String` from `<core/Containers.hpp>`. Demo code should use these aliases for its own game state and values passed to Engine. Convert to `std::string` only at JSON, stream, or filesystem boundaries using `<core/StringInterop.hpp>`. Rebuild Demo and Engine together after this source API change.
+Engine collection and text APIs now use `Ursa::Vector`, `Ursa::Array`, `Ursa::Deque`, and `Ursa::String` from `<core/Containers.hpp>`. Demo code should use these aliases for its own game state and values passed to Engine. Convert to `std::string` only at JSON, stream, or filesystem boundaries using `<core/StringInterop.hpp>`. Rebuild Demo and Engine together after this source API change.
 
 ## Material showcase
 
@@ -57,15 +61,15 @@ The board is stored in `assets/snake/board.ursaprefab`; `assets/snake/snake.ursa
 #include "SnakeSerialization.hpp"
 #include <serialization/SceneResource.hpp>
 
-void loadSnake(const std::filesystem::path &file, ursa::ResourceSession &resources,
-               ursa::demo::SnakeGame &game) {
-    ursa::ComponentRegistry registry;
-    if (!ursa::registerBuiltinComponents(registry) ||
-        !ursa::demo::registerSnakeComponents(registry))
+void loadSnake(const std::filesystem::path &file, Ursa::ResourceSession &resources,
+               Ursa::Demo::SnakeGame &game) {
+    Ursa::ComponentRegistry registry;
+    if (!Ursa::registerBuiltinComponents(registry) ||
+        !Ursa::Demo::registerSnakeComponents(registry))
         return;
-    ursa::ComponentLoadContext context(resources);
+    Ursa::ComponentLoadContext context(resources);
     context.provide(game);
-    auto scene = ursa::loadSceneResource(file, registry, context);
+    auto scene = Ursa::loadSceneResource(file, registry, context);
 }
 ```
 
@@ -86,20 +90,20 @@ A board tile or other subtree can be saved once with `savePrefabResource` and pl
 ```cpp
 #include <serialization/PrefabResource.hpp>
 
-void moveTile(ursa::LinkedSceneResource &level, const std::filesystem::path &scenePath,
-              ursa::ComponentRegistry &registry, ursa::ComponentLoadContext &context,
-              ursa::ResourceId instanceId, ursa::ResourceId tileNodeId) {
-    if (!ursa::setPrefabPropertyOverride(level, instanceId, tileNodeId,
+void moveTile(Ursa::LinkedSceneResource &level, const std::filesystem::path &scenePath,
+              Ursa::ComponentRegistry &registry, Ursa::ComponentLoadContext &context,
+              Ursa::ResourceId instanceId, Ursa::ResourceId tileNodeId) {
+    if (!Ursa::setPrefabPropertyOverride(level, instanceId, tileNodeId,
                                           "/transform/position/0", 3.0f) ||
-        !ursa::saveLinkedSceneResource(scenePath, level, registry))
+        !Ursa::saveLinkedSceneResource(scenePath, level, registry))
         return;
-    if (!ursa::reloadLinkedSceneResource(scenePath, registry, context, level))
+    if (!Ursa::reloadLinkedSceneResource(scenePath, registry, context, level))
         return;
-    if (!ursa::clearPrefabPropertyOverride(level, instanceId, tileNodeId,
+    if (!Ursa::clearPrefabPropertyOverride(level, instanceId, tileNodeId,
                                             "/transform/position/0") ||
-        !ursa::saveLinkedSceneResource(scenePath, level, registry))
+        !Ursa::saveLinkedSceneResource(scenePath, level, registry))
         return;
-    ursa::reloadLinkedSceneResource(scenePath, registry, context, level);
+    Ursa::reloadLinkedSceneResource(scenePath, registry, context, level);
 }
 ```
 
