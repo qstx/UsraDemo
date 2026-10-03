@@ -16,42 +16,42 @@ add_subdirectory("${URSA_ENGINE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/Engine")
 if(WIN32)
   add_custom_target(UrsaDemoFormatCheck
     COMMAND powershell.exe -NoProfile -ExecutionPolicy Bypass
-      -File "${CMAKE_CURRENT_SOURCE_DIR}/tools/format.ps1" -Check
+      -File "${CMAKE_CURRENT_SOURCE_DIR}/Tools/Format.ps1" -Check
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     VERBATIM)
   add_custom_target(UrsaFormatCheck DEPENDS UrsaEngineFormatCheck UrsaDemoFormatCheck)
   set_target_properties(UrsaDemoFormatCheck UrsaFormatCheck PROPERTIES FOLDER "Tools")
 endif()
 
-add_executable(UrsaEngineHeaderSmoke tests/integration/EngineHeaderSmoke.cpp)
+add_executable(UrsaEngineHeaderSmoke Tests/Integration/EngineHeaderSmoke.cpp)
 target_link_libraries(UrsaEngineHeaderSmoke PRIVATE Ursa::Engine)
 add_test(NAME UrsaEngineHeaderSmoke COMMAND UrsaEngineHeaderSmoke)
 
 file(GLOB_RECURSE URSA_SNAKE_LOGIC_SOURCES CONFIGURE_DEPENDS
-  "${CMAKE_CURRENT_SOURCE_DIR}/snake/game/*.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/snake/game/*.hpp")
+  "${CMAKE_CURRENT_SOURCE_DIR}/Snake/Game/*.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Snake/Game/*.hpp")
 add_library(UrsaSnakeLogic STATIC ${URSA_SNAKE_LOGIC_SOURCES})
-target_include_directories(UrsaSnakeLogic PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/snake/game)
+target_include_directories(UrsaSnakeLogic PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Snake/Game)
 target_link_libraries(UrsaSnakeLogic PUBLIC Ursa::Runtime)
 target_compile_features(UrsaSnakeLogic PUBLIC cxx_std_17)
 
-add_executable(UrsaSnakeTests tests/snake/game/SnakeTests.cpp)
+add_executable(UrsaSnakeTests Tests/Snake/Game/SnakeTests.cpp)
 target_link_libraries(UrsaSnakeTests PRIVATE UrsaSnakeLogic)
 add_test(NAME UrsaSnakeTests COMMAND UrsaSnakeTests)
 
 file(GLOB_RECURSE URSA_SNAKE_SCENE_SOURCES CONFIGURE_DEPENDS
-  "${CMAKE_CURRENT_SOURCE_DIR}/snake/scene/*.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/snake/scene/*.hpp")
+  "${CMAKE_CURRENT_SOURCE_DIR}/Snake/Scene/*.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Snake/Scene/*.hpp")
 add_library(UrsaSnakeScene STATIC ${URSA_SNAKE_SCENE_SOURCES})
 target_link_libraries(UrsaSnakeScene PUBLIC Ursa::Engine UrsaSnakeLogic)
-target_include_directories(UrsaSnakeScene PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/snake/scene)
+target_include_directories(UrsaSnakeScene PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Snake/Scene)
 
-add_executable(UrsaSnakeAssetBake tools/BakeSnakeAssets.cpp)
+add_executable(UrsaSnakeAssetBake Tools/BakeSnakeAssets.cpp)
 target_link_libraries(UrsaSnakeAssetBake PRIVATE UrsaSnakeScene)
 
 file(GLOB URSA_SNAKE_APP_SOURCES CONFIGURE_DEPENDS
-  "${CMAKE_CURRENT_SOURCE_DIR}/snake/*.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/snake/*.hpp")
+  "${CMAKE_CURRENT_SOURCE_DIR}/Snake/*.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Snake/*.hpp")
 add_executable(UrsaSnake ${URSA_SNAKE_APP_SOURCES})
 target_link_libraries(UrsaSnake PRIVATE UrsaSnakeScene)
 add_test(NAME UrsaSnakeWindowSmoke COMMAND UrsaSnake --project "${CMAKE_CURRENT_SOURCE_DIR}" --hidden --frames 20 --stress-window --smoke-gameplay)
@@ -59,36 +59,36 @@ add_test(NAME UrsaSnakeSerializedWindowSmoke COMMAND UrsaSnake --project "${CMAK
 add_test(NAME UrsaSnakeAssetWindowSmoke COMMAND UrsaSnake --project "${CMAKE_CURRENT_SOURCE_DIR}" --hidden --frames 3)
 
 if(TARGET Ursa::Editor)
-  add_executable(UrsaDemoEditor editor/Main.cpp editor/SnakeEditors.cpp editor/SnakeEditors.hpp)
+  add_executable(UrsaDemoEditor Editor/Main.cpp Editor/SnakeEditors.cpp Editor/SnakeEditors.hpp)
   target_link_libraries(UrsaDemoEditor PRIVATE Ursa::Editor UrsaSnakeScene)
-  add_test(NAME UrsaDemoEditorWindowSmoke COMMAND UrsaDemoEditor --project "${CMAKE_CURRENT_SOURCE_DIR}" --scene snake/snake.ursascene --hidden --frames 3)
+  add_test(NAME UrsaDemoEditorWindowSmoke COMMAND UrsaDemoEditor --project "${CMAKE_CURRENT_SOURCE_DIR}" --scene Snake/Snake.ursascene --hidden --frames 3)
 
-  add_executable(UrsaSnakeEditorTests tests/snake/scene/SnakeEditorTests.cpp editor/SnakeEditors.cpp)
+  add_executable(UrsaSnakeEditorTests Tests/Snake/Scene/SnakeEditorTests.cpp Editor/SnakeEditors.cpp)
   target_link_libraries(UrsaSnakeEditorTests PRIVATE Ursa::Editor UrsaSnakeScene)
-  target_include_directories(UrsaSnakeEditorTests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/editor")
+  target_include_directories(UrsaSnakeEditorTests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Editor")
   add_test(NAME UrsaSnakeEditorTests COMMAND UrsaSnakeEditorTests)
 endif()
 
 file(GLOB URSA_MATERIAL_SHOWCASE_SOURCES CONFIGURE_DEPENDS
-  "${CMAKE_CURRENT_SOURCE_DIR}/material/*.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/material/*.hpp")
+  "${CMAKE_CURRENT_SOURCE_DIR}/Material/*.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Material/*.hpp")
 add_executable(UrsaMaterialShowcase ${URSA_MATERIAL_SHOWCASE_SOURCES})
 target_link_libraries(UrsaMaterialShowcase PRIVATE Ursa::Engine)
 add_test(NAME UrsaMaterialWindowSmoke COMMAND UrsaMaterialShowcase --hidden --frames 20)
 
-add_executable(UrsaSnakeSceneTests tests/snake/scene/SnakeSceneTests.cpp)
+add_executable(UrsaSnakeSceneTests Tests/Snake/Scene/SnakeSceneTests.cpp)
 target_link_libraries(UrsaSnakeSceneTests PRIVATE UrsaSnakeScene)
 add_test(NAME UrsaSnakeSceneTests COMMAND UrsaSnakeSceneTests)
 
-add_executable(UrsaSnakeAssetTests tests/snake/scene/SnakeAssetTests.cpp)
+add_executable(UrsaSnakeAssetTests Tests/Snake/Scene/SnakeAssetTests.cpp)
 target_link_libraries(UrsaSnakeAssetTests PRIVATE UrsaSnakeScene)
 add_test(NAME UrsaSnakeAssetTests COMMAND UrsaSnakeAssetTests "${CMAKE_CURRENT_SOURCE_DIR}")
 
-add_executable(UrsaSnakeSerializationTests tests/snake/scene/SnakeSerializationTests.cpp)
+add_executable(UrsaSnakeSerializationTests Tests/Snake/Scene/SnakeSerializationTests.cpp)
 target_link_libraries(UrsaSnakeSerializationTests PRIVATE UrsaSnakeScene)
 add_test(NAME UrsaSnakeSerializationTests COMMAND UrsaSnakeSerializationTests)
 
-add_executable(UrsaSnakeRenderTests tests/snake/scene/SnakeRenderTests.cpp)
+add_executable(UrsaSnakeRenderTests Tests/Snake/Scene/SnakeRenderTests.cpp)
 target_link_libraries(UrsaSnakeRenderTests PRIVATE UrsaSnakeScene)
 add_test(NAME UrsaSnakeRenderTests COMMAND UrsaSnakeRenderTests)
 
@@ -97,13 +97,13 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES
   ${URSA_SNAKE_LOGIC_SOURCES}
   ${URSA_SNAKE_SCENE_SOURCES}
   ${URSA_MATERIAL_SHOWCASE_SOURCES}
-  tools/BakeSnakeAssets.cpp
-  tests/integration/EngineHeaderSmoke.cpp
-  tests/snake/game/SnakeTests.cpp
-  tests/snake/scene/SnakeSceneTests.cpp
-  tests/snake/scene/SnakeAssetTests.cpp
-  tests/snake/scene/SnakeSerializationTests.cpp
-  tests/snake/scene/SnakeRenderTests.cpp)
+  Tools/BakeSnakeAssets.cpp
+  Tests/Integration/EngineHeaderSmoke.cpp
+  Tests/Snake/Game/SnakeTests.cpp
+  Tests/Snake/Scene/SnakeSceneTests.cpp
+  Tests/Snake/Scene/SnakeAssetTests.cpp
+  Tests/Snake/Scene/SnakeSerializationTests.cpp
+  Tests/Snake/Scene/SnakeRenderTests.cpp)
 
 # Group Demo applications and their tests into solution folders.
 get_property(URSA_DEMO_TARGETS DIRECTORY PROPERTY BUILDSYSTEM_TARGETS)
