@@ -51,7 +51,7 @@ void MoveTile(Ursa::LinkedSceneResource& level, const std::filesystem::path& sce
               Ursa::ComponentRegistry& registry, Ursa::ComponentLoadContext& context, Ursa::ResourceId instanceId,
               Ursa::ResourceId tileNodeId)
 {
-	if (!Ursa::SetPrefabPropertyOverride(level, instanceId, tileNodeId, "/transform/position/0", 3.0f) ||
+	if (!Ursa::SetPrefabPropertyOverride(level, instanceId, tileNodeId, "/localTransform/position/0", 3.0f) ||
 	    !Ursa::SaveLinkedSceneResource(scenePath, level, registry))
 	{
 		return;
@@ -60,7 +60,7 @@ void MoveTile(Ursa::LinkedSceneResource& level, const std::filesystem::path& sce
 	{
 		return;
 	}
-	if (!Ursa::ClearPrefabPropertyOverride(level, instanceId, tileNodeId, "/transform/position/0") ||
+	if (!Ursa::ClearPrefabPropertyOverride(level, instanceId, tileNodeId, "/localTransform/position/0") ||
 	    !Ursa::SaveLinkedSceneResource(scenePath, level, registry))
 	{
 		return;
@@ -76,7 +76,8 @@ struct CleanupCount
 class CleanupComponent final : public Ursa::Component
 {
 public:
-	CleanupComponent(Ursa::Demo::SnakeGame& game, CleanupCount& count) : game(game), count(count)
+	CleanupComponent(Ursa::Demo::SnakeGame& snakeGame, CleanupCount& cleanupCount)
+	    : game(snakeGame), count(cleanupCount)
 	{
 	}
 
@@ -98,7 +99,8 @@ void RegisterCleanup(Ursa::ComponentRegistry& registry)
 	{ return dynamic_cast<const CleanupComponent*>(&component) != nullptr; };
 	codec.save = [](const Ursa::Component&, const Ursa::ComponentSaveContext&)
 	{ return Ursa::Result<nlohmann::json>::Success(nlohmann::json::object()); };
-	codec.create = [](Ursa::Scene& scene, Ursa::NodeId node, const nlohmann::json&, Ursa::ComponentLoadContext& context)
+	codec.create =
+	    [](Ursa::Scene& scene, Ursa::GameObject::Ptr node, const nlohmann::json&, Ursa::ComponentLoadContext& context)
 	{
 		auto game = context.Service<Ursa::Demo::SnakeGame>();
 		auto count = context.Service<CleanupCount>();
@@ -125,7 +127,7 @@ void Test(const std::filesystem::path& root)
 	RegisterCleanup(registry);
 	Ursa::Scene source;
 	done(Ursa::Demo::SetupSnakeScene(source, game, false, false));
-	Take(source.AddComponent<CleanupComponent>(source.RootNodes()[0], game, cleanup));
+	Take(source.AddComponent<CleanupComponent>(source.RootGameObjects()[0], game, cleanup));
 	const auto path = root / "Snake.ursascene";
 	done(Ursa::SaveSceneResource(path, Ursa::ResourceId::Generate(), source, registry));
 	auto session = Take(Ursa::ResourceSession::Open({root}));
@@ -134,7 +136,7 @@ void Test(const std::filesystem::path& root)
 	context.Provide(game);
 	context.Provide(cleanup);
 	auto loaded = Take(Ursa::LoadSceneResource(path, registry, context));
-	auto* controller = loaded.scene->FindComponent<Ursa::Demo::SnakeController>(loaded.scene->RootNodes()[0]);
+	auto* controller = loaded.scene->FindComponent<Ursa::Demo::SnakeController>(loaded.scene->RootGameObjects()[0]);
 	Expect(controller && !controller->StressWindow() && !controller->SmokeGameplay(),
 	       "Snake controller fields were not restored");
 	loaded.scene->BeginFrame();

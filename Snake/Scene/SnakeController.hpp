@@ -1,15 +1,15 @@
 #pragma once
+#include <Core/Types.hpp>
 #include <Core/Containers.hpp>
 #include "SnakeGame.hpp"
 #include <Scene/Component.hpp>
-#include <array>
 
 namespace Ursa::Demo
 {
 class SnakeController final : public Component
 {
 public:
-	SnakeController(SnakeGame& game, bool stressWindow, bool smokeGameplay);
+	SnakeController(SnakeGame& snakeGame, bool enableWindowStress, bool enableGameplaySmoke);
 
 	Result<void> OnUpdate(const FrameContext& context) override;
 
@@ -43,7 +43,7 @@ private:
 	SnakeGame& game;
 	FixedStepClock clock;
 	Ursa::Array<bool, 8> previousKeys{};
-	uint32_t frame = 0;
+	Ursa::UInt32 frame = 0;
 	bool stressWindow = false;
 	bool smokeGameplay = false;
 	bool previousSpace = false;

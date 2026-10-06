@@ -54,13 +54,21 @@ file(GLOB URSA_SNAKE_APP_SOURCES CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/Snake/*.hpp")
 add_executable(UrsaSnake ${URSA_SNAKE_APP_SOURCES})
 target_link_libraries(UrsaSnake PRIVATE UrsaSnakeScene)
-add_test(NAME UrsaSnakeWindowSmoke COMMAND UrsaSnake --project "${CMAKE_CURRENT_SOURCE_DIR}" --hidden --frames 20 --stress-window --smoke-gameplay)
-add_test(NAME UrsaSnakeSerializedWindowSmoke COMMAND UrsaSnake --project "${CMAKE_CURRENT_SOURCE_DIR}" --hidden --frames 20 --stress-window --smoke-gameplay --serialized)
-add_test(NAME UrsaSnakeAssetWindowSmoke COMMAND UrsaSnake --project "${CMAKE_CURRENT_SOURCE_DIR}" --hidden --frames 3)
+set_target_properties(UrsaSnake PROPERTIES
+  VS_DEBUGGER_COMMAND_ARGUMENTS ""
+  VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+add_test(NAME UrsaSnakeWindowSmoke COMMAND UrsaSnake --hidden --frames 20 --stress-window --smoke-gameplay)
+add_test(NAME UrsaSnakeSerializedWindowSmoke COMMAND UrsaSnake --hidden --frames 20 --stress-window --smoke-gameplay --serialized)
+add_test(NAME UrsaSnakeAssetWindowSmoke COMMAND UrsaSnake --hidden --frames 3)
+set_tests_properties(UrsaSnakeWindowSmoke UrsaSnakeSerializedWindowSmoke UrsaSnakeAssetWindowSmoke PROPERTIES
+  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
 if(TARGET Ursa::Editor)
   add_executable(UrsaDemoEditor Editor/Main.cpp Editor/SnakeEditors.cpp Editor/SnakeEditors.hpp)
   target_link_libraries(UrsaDemoEditor PRIVATE Ursa::Editor UrsaSnakeScene)
+  set_target_properties(UrsaDemoEditor PROPERTIES
+    VS_DEBUGGER_COMMAND_ARGUMENTS "--project \"${CMAKE_CURRENT_SOURCE_DIR}\" --scene Snake/Snake.ursascene"
+    VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
   add_test(NAME UrsaDemoEditorWindowSmoke COMMAND UrsaDemoEditor --project "${CMAKE_CURRENT_SOURCE_DIR}" --scene Snake/Snake.ursascene --hidden --frames 3)
 
   add_executable(UrsaSnakeEditorTests Tests/Snake/Scene/SnakeEditorTests.cpp Editor/SnakeEditors.cpp)

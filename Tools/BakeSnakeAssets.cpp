@@ -1,3 +1,4 @@
+#include <Core/Types.hpp>
 #include <SnakeGame.hpp>
 #include <SnakeScene.hpp>
 #include <SnakeSerialization.hpp>
@@ -13,7 +14,7 @@
 
 namespace
 {
-Ursa::ResourceId StableId(uint8_t kind, uint32_t index)
+Ursa::ResourceId StableId(Ursa::UInt8 kind, Ursa::UInt32 index)
 {
 	Ursa::ResourceId id;
 	id.bytes[0] = 0x75;
@@ -23,18 +24,19 @@ Ursa::ResourceId StableId(uint8_t kind, uint32_t index)
 	id.bytes[8] = kind;
 	for (unsigned byte = 0; byte < 4; ++byte)
 	{
-		id.bytes[15 - byte] = static_cast<uint8_t>(index >> (byte * 8));
+		id.bytes[15 - byte] = static_cast<Ursa::UInt8>(index >> (byte * 8));
 	}
 	return id;
 }
 
 Ursa::Result<void> AssignStableIds(Ursa::Scene& scene)
 {
-	uint32_t nextNode = 1;
-	uint32_t nextComponent = 1;
-	std::function<Ursa::Result<void>(Ursa::NodeId)> visit = [&](Ursa::NodeId node) -> Ursa::Result<void>
+	Ursa::UInt32 nextNode = 1;
+	Ursa::UInt32 nextComponent = 1;
+	std::function<Ursa::Result<void>(Ursa::GameObject::Ptr)> visit =
+	    [&](Ursa::GameObject::Ptr node) -> Ursa::Result<void>
 	{
-		auto assigned = scene.AssignNodePersistentId(node, StableId(1, nextNode++));
+		auto assigned = scene.AssignGameObjectId(node, StableId(1, nextNode++));
 		if (!assigned)
 		{
 			return assigned;
@@ -57,7 +59,7 @@ Ursa::Result<void> AssignStableIds(Ursa::Scene& scene)
 		{
 			return Ursa::Result<void>::Failure(children.error);
 		}
-		for (Ursa::NodeId child : children.value)
+		for (Ursa::GameObject::Ptr child : children.value)
 		{
 			assigned = visit(child);
 			if (!assigned)
@@ -67,7 +69,7 @@ Ursa::Result<void> AssignStableIds(Ursa::Scene& scene)
 		}
 		return {};
 	};
-	for (Ursa::NodeId root : scene.RootNodes())
+	for (Ursa::GameObject::Ptr root : scene.RootGameObjects())
 	{
 		auto assigned = visit(root);
 		if (!assigned)
@@ -107,7 +109,7 @@ Ursa::Result<void> Bake(const std::filesystem::path& assetRoot, bool force)
 	{
 		return assigned;
 	}
-	auto roots = scene.RootNodes();
+	auto roots = scene.RootGameObjects();
 	if (roots.size() != 1)
 	{
 		return Ursa::Result<void>::Failure("Snake scene must have one root");
@@ -117,8 +119,8 @@ Ursa::Result<void> Bake(const std::filesystem::path& assetRoot, bool force)
 	{
 		return Ursa::Result<void>::Failure("Snake scene has no board subtree");
 	}
-	const Ursa::NodeId board = children.value.front();
-	auto parentId = scene.NodePersistentId(roots.front());
+	const Ursa::GameObject::Ptr board = children.value.front();
+	auto parentId = scene.PersistentId(roots.front());
 	if (!parentId)
 	{
 		return Ursa::Result<void>::Failure(parentId.error);
@@ -142,7 +144,7 @@ Ursa::Result<void> Bake(const std::filesystem::path& assetRoot, bool force)
 	{
 		return saved;
 	}
-	auto removed = scene.DestroyNode(board);
+	auto removed = scene.DestroyGameObject(board);
 	if (!removed)
 	{
 		return removed;

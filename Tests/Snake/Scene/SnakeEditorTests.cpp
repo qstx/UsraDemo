@@ -64,9 +64,9 @@ int main()
 			return Result<void>{};
 		};
 		const auto path = Take(VirtualPath::Parse("prj:Snake.ursascene"));
-		auto document = Take(Editor::NewSceneDocument(path, ResourceKind::scene, codecs, documents->Session(), setup));
+		auto document = Take(Editor::NewSceneDocument(path, ResourceKind::Scene, codecs, documents->Session(), setup));
 		auto draft = document->Payload<Editor::SceneDraft>();
-		const NodeId node = draft->GetScene().RootNodes().front();
+		const GameObject::Ptr node = draft->GetScene().RootGameObjects().front();
 		auto controllerId = Take(draft->GetScene().AddComponent<Demo::SnakeController>(node, editGame, false, false));
 		auto presentationId =
 		    Take(draft->GetScene().AddComponent<Demo::SnakePresentation>(node, editGame, node, false));
@@ -78,9 +78,9 @@ int main()
 		document->MarkDirty();
 		done(documents->RequestOpen(std::move(document)));
 		done(documents->SaveCurrent());
-		auto reopened = Take(Editor::OpenSceneDocument(path, ResourceKind::scene, codecs, documents->Session(), setup));
+		auto reopened = Take(Editor::OpenSceneDocument(path, ResourceKind::Scene, codecs, documents->Session(), setup));
 		const auto loaded = reopened->Payload<Editor::SceneDraft>();
-		const NodeId loadedNode = loaded->GetScene().RootNodes().front();
+		const GameObject::Ptr loadedNode = loaded->GetScene().RootGameObjects().front();
 		const auto* loadedController = loaded->GetScene().FindComponent<Demo::SnakeController>(loadedNode);
 		const auto* loadedPresentation = loaded->GetScene().FindComponent<Demo::SnakePresentation>(loadedNode);
 		Expect(loadedController && loadedController->StressWindow() && loadedController->SmokeGameplay() &&

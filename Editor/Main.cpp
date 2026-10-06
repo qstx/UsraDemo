@@ -1,3 +1,4 @@
+#include <Core/Types.hpp>
 #include <Application/EditorApplication.hpp>
 #include <Core/Log.hpp>
 #include <Core/StringInterop.hpp>
@@ -14,8 +15,8 @@ namespace
 class DemoEditor final : public Ursa::Editor::EditorApplication
 {
 public:
-	DemoEditor(Ursa::Editor::EditorProjectSetup setup, Ursa::String initialScene)
-	    : EditorApplication(std::move(setup)), initialScene(std::move(initialScene))
+	DemoEditor(Ursa::Editor::EditorProjectSetup setup, Ursa::String scenePath)
+	    : EditorApplication(std::move(setup)), initialScene(std::move(scenePath))
 	{
 	}
 
@@ -36,7 +37,7 @@ protected:
 		{
 			return Ursa::Result<void>::Failure(target.error);
 		}
-		auto opened = Ursa::Editor::OpenSceneDocument(path.value, Ursa::ResourceKind::scene, Project().components,
+		auto opened = Ursa::Editor::OpenSceneDocument(path.value, Ursa::ResourceKind::Scene, Project().components,
 		                                              Documents()->Session(), Project().editContextSetup);
 		if (!opened)
 		{
@@ -55,7 +56,7 @@ int main(int argc, char** argv)
 	Ursa::LogSession logging;
 	URSA_LOG_INFO("Editor", "Starting UrsaDemoEditor");
 	bool visible = true;
-	uint32_t frames = 0;
+	Ursa::UInt32 frames = 0;
 	std::filesystem::path projectRoot;
 	std::filesystem::path initialScene;
 	for (int index = 1; index < argc; ++index)
@@ -67,7 +68,7 @@ int main(int argc, char** argv)
 		}
 		else if (argument == "--frames" && index + 1 < argc)
 		{
-			frames = static_cast<uint32_t>(std::strtoul(argv[++index], nullptr, 10));
+			frames = static_cast<Ursa::UInt32>(std::strtoul(argv[++index], nullptr, 10));
 		}
 		else if (argument == "--project" && index + 1 < argc)
 		{

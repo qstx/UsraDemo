@@ -41,15 +41,15 @@ void TestDirectionBuffer()
 	config.width = config.height = 8;
 	config.initialFood = Cell{7, 7};
 	SnakeGame game(config);
-	game.QueueDirection(Direction::left);
-	game.QueueDirection(Direction::up);
-	game.QueueDirection(Direction::down);
+	game.QueueDirection(Direction::Left);
+	game.QueueDirection(Direction::Up);
+	game.QueueDirection(Direction::Down);
 	game.Step();
-	Expect(game.GetDirection() == Direction::up && game.GetBody().front() == Cell{4, 3},
+	Expect(game.GetDirection() == Direction::Up && game.GetBody().front() == Cell{4, 3},
 	       "Direction buffering or reverse protection failed");
-	game.QueueDirection(Direction::down);
+	game.QueueDirection(Direction::Down);
 	game.Step();
-	Expect(game.GetDirection() == Direction::up && game.GetBody().front() == Cell{4, 2},
+	Expect(game.GetDirection() == Direction::Up && game.GetBody().front() == Cell{4, 2},
 	       "Direct reversal changed snake direction");
 }
 
@@ -78,27 +78,27 @@ void TestCollisionAndTail()
 	wall.initialFood = Cell{0, 0};
 	SnakeGame wallGame(wall);
 	wallGame.Step();
-	Expect(wallGame.GetStatus() == GameStatus::lost && wallGame.GetBody().front() == Cell{3, 1},
+	Expect(wallGame.GetStatus() == GameStatus::Lost && wallGame.GetBody().front() == Cell{3, 1},
 	       "Wall collision did not stop the game");
 	wallGame.Reset();
-	Expect(wallGame.GetStatus() == GameStatus::running, "Restart did not clear the loss state");
+	Expect(wallGame.GetStatus() == GameStatus::Running, "Restart did not clear the loss state");
 
 	SnakeConfig loop;
 	loop.width = loop.height = 4;
 	loop.initialBody = {{1, 1}, {1, 2}, {2, 2}, {2, 1}};
-	loop.initialDirection = Direction::up;
+	loop.initialDirection = Direction::Up;
 	loop.initialFood = Cell{0, 0};
 	SnakeGame tailGame(loop);
-	tailGame.QueueDirection(Direction::right);
+	tailGame.QueueDirection(Direction::Right);
 	tailGame.Step();
-	Expect(tailGame.GetStatus() == GameStatus::running && tailGame.GetBody().front() == Cell{2, 1},
+	Expect(tailGame.GetStatus() == GameStatus::Running && tailGame.GetBody().front() == Cell{2, 1},
 	       "Moving into the vacated tail should be legal");
 
 	loop.initialBody = {{1, 1}, {1, 2}, {2, 2}, {2, 1}, {3, 1}};
 	SnakeGame bodyGame(loop);
-	bodyGame.QueueDirection(Direction::right);
+	bodyGame.QueueDirection(Direction::Right);
 	bodyGame.Step();
-	Expect(bodyGame.GetStatus() == GameStatus::lost, "Body collision was not detected");
+	Expect(bodyGame.GetStatus() == GameStatus::Lost, "Body collision was not detected");
 }
 
 void TestWin()
@@ -109,7 +109,7 @@ void TestWin()
 	config.initialFood = Cell{1, 0};
 	SnakeGame game(config);
 	game.Step();
-	Expect(game.GetStatus() == GameStatus::won && !game.GetFood() && game.GetBody().size() == 4 && game.GetScore() == 1,
+	Expect(game.GetStatus() == GameStatus::Won && !game.GetFood() && game.GetBody().size() == 4 && game.GetScore() == 1,
 	       "Filling the board did not win cleanly");
 	game.Step();
 	Expect(game.GetBody().size() == 4, "Won game continued moving");

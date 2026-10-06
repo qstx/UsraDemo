@@ -1,3 +1,4 @@
+#include <Core/Types.hpp>
 #include "SnakeScene.hpp"
 #include "SnakePresentation.hpp"
 #include <cmath>
@@ -14,7 +15,7 @@ void Expect(bool condition, const char* message)
 	}
 }
 
-void ExpectNear(float actual, float expected)
+void ExpectNear(Ursa::Float32 actual, Ursa::Float32 expected)
 {
 	Expect(std::abs(actual - expected) < 0.0001f, "Scene position does not match grid position");
 }
@@ -42,7 +43,7 @@ int main()
 		game.Reset();
 		Ursa::Scene graph;
 		Expect(static_cast<bool>(Ursa::Demo::SetupSnakeScene(graph, game)), "Could not create snake scene graph");
-		const auto roots = graph.RootNodes();
+		const auto roots = graph.RootGameObjects();
 		Expect(roots.size() == 1, "Snake scene has the wrong root structure");
 		auto* presentation = graph.FindComponent<Ursa::Demo::SnakePresentation>(roots[0]);
 		Expect(presentation != nullptr, "Snake presentation component is missing");
@@ -60,7 +61,7 @@ int main()
 		       "Growth was not visible in the same frame");
 		game.Step();
 		game.Step();
-		Expect(game.GetStatus() == Ursa::Demo::GameStatus::lost, "Scripted game did not lose");
+		Expect(game.GetStatus() == Ursa::Demo::GameStatus::Lost, "Scripted game did not lose");
 		game.Reset();
 		graph.BeginFrame();
 		Expect(static_cast<bool>(graph.LateUpdate({})), "Restart synchronization failed");

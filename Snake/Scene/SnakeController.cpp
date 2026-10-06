@@ -1,11 +1,11 @@
+#include <Core/Types.hpp>
 #include <Core/Containers.hpp>
 #include "SnakeController.hpp"
-#include <array>
 
 namespace Ursa::Demo
 {
-SnakeController::SnakeController(SnakeGame& game, bool stressWindow, bool smokeGameplay)
-    : game(game), stressWindow(stressWindow), smokeGameplay(smokeGameplay)
+SnakeController::SnakeController(SnakeGame& snakeGame, bool enableWindowStress, bool enableGameplaySmoke)
+    : game(snakeGame), stressWindow(enableWindowStress), smokeGameplay(enableGameplaySmoke)
 {
 }
 
@@ -21,7 +21,7 @@ Result<void> SnakeController::OnUpdate(const FrameContext& context)
 		context.window->Minimize();
 		context.window->Restore();
 	}
-	if (context.input.KeyDown(Key::escape))
+	if (context.input.KeyDown(Key::Escape))
 	{
 		context.window->RequestClose();
 	}
@@ -47,10 +47,10 @@ Result<void> SnakeController::OnFixedUpdate(const FrameContext& context)
 
 void SnakeController::ReadInput(const FrameContext& context)
 {
-	const Ursa::Array<Key, 8> keys{Key::up, Key::w, Key::down, Key::s, Key::left, Key::a, Key::right, Key::d};
-	const Ursa::Array<Direction, 8> directions{Direction::up,   Direction::up,   Direction::down,  Direction::down,
-	                                           Direction::left, Direction::left, Direction::right, Direction::right};
-	for (size_t i = 0; i < keys.size(); ++i)
+	const Ursa::Array<Key, 8> keys{Key::Up, Key::W, Key::Down, Key::S, Key::Left, Key::A, Key::Right, Key::D};
+	const Ursa::Array<Direction, 8> directions{Direction::Up,   Direction::Up,   Direction::Down,  Direction::Down,
+	                                           Direction::Left, Direction::Left, Direction::Right, Direction::Right};
+	for (Ursa::Size i = 0; i < keys.size(); ++i)
 	{
 		const bool down = context.input.KeyDown(keys[i]);
 		if (down && !previousKeys[i])
@@ -59,7 +59,7 @@ void SnakeController::ReadInput(const FrameContext& context)
 		}
 		previousKeys[i] = down;
 	}
-	const bool space = context.input.KeyDown(Key::space);
+	const bool space = context.input.KeyDown(Key::Space);
 	if (space && !previousSpace)
 	{
 		game.Reset();
@@ -81,7 +81,7 @@ Result<void> SnakeController::RunSmokeStep()
 	else if (frame == 2 || frame == 3)
 	{
 		game.Step();
-		if (frame == 3 && game.GetStatus() != GameStatus::lost)
+		if (frame == 3 && game.GetStatus() != GameStatus::Lost)
 		{
 			return Result<void>::Failure("Smoke game did not reach game over");
 		}
@@ -89,7 +89,7 @@ Result<void> SnakeController::RunSmokeStep()
 	else if (frame == 4)
 	{
 		game.Reset();
-		if (game.GetStatus() != GameStatus::running || game.GetScore() != 0)
+		if (game.GetStatus() != GameStatus::Running || game.GetScore() != 0)
 		{
 			return Result<void>::Failure("Smoke game did not restart");
 		}

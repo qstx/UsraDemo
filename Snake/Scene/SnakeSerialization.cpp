@@ -29,7 +29,7 @@ Result<void> RegisterController(ComponentRegistry& registry)
 		return Result<nlohmann::json>::Success(
 		    {{"stressWindow", controller.StressWindow()}, {"smokeGameplay", controller.SmokeGameplay()}});
 	};
-	codec.create = [](Scene& scene, NodeId node, const nlohmann::json& data, ComponentLoadContext& context)
+	codec.create = [](Scene& scene, GameObject::Ptr node, const nlohmann::json& data, ComponentLoadContext& context)
 	{
 		auto stress = Boolean(data, "stressWindow");
 		auto smoke = Boolean(data, "smokeGameplay");
@@ -44,6 +44,22 @@ Result<void> RegisterController(ComponentRegistry& registry)
 		}
 		return scene.AddComponent<SnakeController>(node, *game.value, stress.value, smoke.value);
 	};
+	codec.createDetached = [](GameObject::Ptr node, const nlohmann::json& data, ComponentLoadContext& context)
+	{
+		auto stress = Boolean(data, "stressWindow");
+		auto smoke = Boolean(data, "smokeGameplay");
+		if (!stress || !smoke)
+		{
+			return Result<Component*>::Failure(!stress ? stress.error : smoke.error);
+		}
+		auto game = context.Service<SnakeGame>();
+		if (!game)
+		{
+			return Result<Component*>::Failure(game.error);
+		}
+		auto added = node->AddComponent<SnakeController>(*game.value, stress.value, smoke.value);
+		return added ? Result<Component*>::Success(added.value) : Result<Component*>::Failure(added.error);
+	};
 	return registry.RegisterCodec(std::move(codec));
 }
 
@@ -57,7 +73,7 @@ Result<void> RegisterPresentation(ComponentRegistry& registry)
 	codec.save = [](const Component& component, const ComponentSaveContext& context)
 	{
 		const auto& presentation = static_cast<const SnakePresentation&>(component);
-		auto root = context.GetNodeId(presentation.RootNode());
+		auto root = context.GetGameObjectId(presentation.RootNode());
 		if (!root)
 		{
 			return Result<nlohmann::json>::Failure(root.error);
@@ -65,7 +81,7 @@ Result<void> RegisterPresentation(ComponentRegistry& registry)
 		return Result<nlohmann::json>::Success(
 		    {{"root", ToStdString(root.value.ToString())}, {"smokeGameplay", presentation.SmokeGameplay()}});
 	};
-	codec.create = [](Scene& scene, NodeId node, const nlohmann::json& data, ComponentLoadContext& context)
+	codec.create = [](Scene& scene, GameObject::Ptr node, const nlohmann::json& data, ComponentLoadContext& context)
 	{
 		auto smoke = Boolean(data, "smokeGameplay");
 		if (!smoke || !data.contains("root") || !data["root"].is_string())
@@ -79,6 +95,21 @@ Result<void> RegisterPresentation(ComponentRegistry& registry)
 		}
 		return scene.AddComponent<SnakePresentation>(node, *game.value, node, smoke.value);
 	};
+	codec.createDetached = [](GameObject::Ptr node, const nlohmann::json& data, ComponentLoadContext& context)
+	{
+		auto smoke = Boolean(data, "smokeGameplay");
+		if (!smoke || !data.contains("root") || !data["root"].is_string())
+		{
+			return Result<Component*>::Failure(!smoke ? smoke.error : "Invalid Snake presentation root");
+		}
+		auto game = context.Service<SnakeGame>();
+		if (!game)
+		{
+			return Result<Component*>::Failure(game.error);
+		}
+		auto added = node->AddComponent<SnakePresentation>(*game.value, node, smoke.value);
+		return added ? Result<Component*>::Success(added.value) : Result<Component*>::Failure(added.error);
+	};
 	codec.bind = [](Scene& scene, ComponentId component, const nlohmann::json& data,
 	                ComponentLoadContext& context) -> Result<void>
 	{
@@ -87,13 +118,33 @@ Result<void> RegisterPresentation(ComponentRegistry& registry)
 		{
 			return Result<void>::Failure(id.error);
 		}
-		auto root = context.Node(id.value);
+		auto root = context.GameObjectById(id.value);
 		if (!root)
 		{
 			return Result<void>::Failure(root.error);
 		}
 		static_cast<SnakePresentation*>(scene.GetComponent(component))->SetRootNode(root.value);
 		return {};
+	};
+	codec.bindDetached = [](Component* component, const nlohmann::json& data, ComponentLoadContext& context)
+	{
+		auto id = ResourceId::Parse(ToUrsaString(data["root"].get<std::string>()));
+		if (!id)
+		{
+			return Result<void>::Failure(id.error);
+		}
+		auto root = context.GameObjectById(id.value);
+		if (!root)
+		{
+			return Result<void>::Failure(root.error);
+		}
+		auto* presentation = dynamic_cast<SnakePresentation*>(component);
+		if (!presentation)
+		{
+			return Result<void>::Failure("Invalid SnakePresentation component");
+		}
+		presentation->SetRootNode(root.value);
+		return Result<void>::Success();
 	};
 	return registry.RegisterCodec(std::move(codec));
 }

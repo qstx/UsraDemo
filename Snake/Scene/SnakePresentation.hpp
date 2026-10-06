@@ -1,30 +1,30 @@
 #pragma once
+#include <Core/Types.hpp>
 #include <Core/Containers.hpp>
 #include "SnakeGame.hpp"
 #include <Scene/Scene.hpp>
 #include <string>
-#include <vector>
 
 namespace Ursa::Demo
 {
 class SnakePresentation final : public Component
 {
 public:
-	SnakePresentation(SnakeGame& game, NodeId root, bool smokeGameplay);
+	SnakePresentation(SnakeGame& snakeGame, GameObject::Ptr rootObject, bool enableGameplaySmoke);
 
 	Result<void> OnLateUpdate(const FrameContext& context) override;
 
-	const Ursa::Vector<NodeId>& Segments() const
+	const Ursa::Vector<GameObject::Ptr>& Segments() const
 	{
 		return segments;
 	}
 
-	NodeId FoodNode() const
+	GameObject::Ptr FoodNode() const
 	{
 		return foodNode;
 	}
 
-	NodeId RootNode() const
+	GameObject::Ptr RootNode() const
 	{
 		return root;
 	}
@@ -34,9 +34,9 @@ public:
 		return smokeGameplay;
 	}
 
-	void SetRootNode(NodeId root)
+	void SetRootNode(GameObject::Ptr rootObject)
 	{
-		this->root = root;
+		this->root = rootObject;
 	}
 
 	void SetSmokeGameplay(bool value)
@@ -51,12 +51,12 @@ private:
 
 	void UpdateTitle(Window* window);
 
-	LocalTransform CellTransform(Cell cell, float height, float size) const;
+	LocalTransform CellTransform(Cell cell, Ursa::Float32 height, Ursa::Float32 size) const;
 
 	SnakeGame& game;
-	NodeId root;
-	Ursa::Vector<NodeId> segments;
-	NodeId foodNode;
+	GameObject::Ptr root;
+	Ursa::Vector<GameObject::Ptr> segments;
+	GameObject::Ptr foodNode;
 	String title;
 	bool smokeGameplay = false;
 };

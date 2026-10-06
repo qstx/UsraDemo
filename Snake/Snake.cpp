@@ -1,3 +1,4 @@
+#include <Core/Types.hpp>
 #include "SnakeGame.hpp"
 #include "SnakeScene.hpp"
 #include "SnakeSerialization.hpp"
@@ -25,10 +26,10 @@ Ursa::Demo::SnakeConfig SmokeConfig()
 class SnakeApp final : public Ursa::Application
 {
 public:
-	SnakeApp(std::filesystem::path projectDirectory, bool stressWindow, bool smokeGameplay, bool serialized)
-	    : game(smokeGameplay ? SmokeConfig() : Ursa::Demo::SnakeConfig{}),
-	      assetsRoot(std::move(projectDirectory) / "Assets"), stressWindow(stressWindow), smokeGameplay(smokeGameplay),
-	      serialized(serialized)
+	SnakeApp(bool enableWindowStress, bool enableGameplaySmoke, bool enableSerializedReload)
+	    : game(enableGameplaySmoke ? SmokeConfig() : Ursa::Demo::SnakeConfig{}),
+	      assetsRoot(std::filesystem::current_path() / "Assets"), stressWindow(enableWindowStress),
+	      smokeGameplay(enableGameplaySmoke), serialized(enableSerializedReload)
 	{
 	}
 
@@ -106,7 +107,7 @@ private:
 		{
 			return registered;
 		}
-		auto session = Ursa::ResourceSession::Open(assetsRoot, Ursa::MountAccess::readOnly);
+		auto session = Ursa::ResourceSession::Open(assetsRoot, Ursa::MountAccess::ReadOnly);
 		if (!session)
 		{
 			return Ursa::Result<void>::Failure(session.error);
@@ -149,8 +150,7 @@ int main(int argc, char** argv)
 		bool stressWindow = false;
 		bool smokeGameplay = false;
 		bool serialized = false;
-		uint32_t frameLimit = 0;
-		std::filesystem::path projectDirectory = std::filesystem::current_path();
+		Ursa::UInt32 frameLimit = 0;
 		for (int i = 1; i < argc; ++i)
 		{
 			const Ursa::String argument = argv[i];
@@ -172,20 +172,15 @@ int main(int argc, char** argv)
 			}
 			else if (argument == "--frames" && i + 1 < argc)
 			{
-				frameLimit = static_cast<uint32_t>(std::stoul(argv[++i]));
-			}
-			else if (argument == "--project" && i + 1 < argc)
-			{
-				projectDirectory = std::filesystem::u8path(argv[++i]);
+				frameLimit = static_cast<Ursa::UInt32>(std::stoul(argv[++i]));
 			}
 			else
 			{
-				throw std::runtime_error(
-				    "Usage: UrsaSnake [--project <project-directory>] [--hidden] [--frames N] [--stress-window] "
-				    "[--smoke-gameplay] [--serialized]");
+				throw std::runtime_error("Usage: UrsaSnake [--hidden] [--frames N] [--stress-window] "
+				                         "[--smoke-gameplay] [--serialized]");
 			}
 		}
-		SnakeApp app(projectDirectory, stressWindow, smokeGameplay, serialized);
+		SnakeApp app(stressWindow, smokeGameplay, serialized);
 		const auto result = app.Run(1280, 720, "Ursa Snake", visible, frameLimit);
 		if (!result)
 		{

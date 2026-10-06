@@ -1,4 +1,6 @@
 #include <Math/Math.hpp>
+#include <Scene/GameObject.hpp>
+#include <Scene/RenderingComponents.hpp>
 
 int main()
 {
@@ -8,5 +10,10 @@ int main()
 	const Ursa::Mat4 viewProjection = camera.ViewProjection(16.0f / 9.0f);
 	const Ursa::Mat4 model = Ursa::Transform{{2.0f, 0.5f, 3.0f}, {1.0f, 1.0f, 1.0f}}.Matrix();
 	const Ursa::Mat4 clipFromModel = viewProjection * model;
-	return clipFromModel.At(3, 3) > 0.0f ? 0 : 1;
+	auto object = Ursa::GameObject::Create("Header smoke");
+	auto box = object->AddComponent<Ursa::BoxRenderComponent>();
+	return clipFromModel.At(3, 3) > 0.0f && box && box.value->GetGameObject() == object &&
+	               box.value->TryGetScene() == nullptr
+	           ? 0
+	           : 1;
 }

@@ -1,10 +1,9 @@
 #pragma once
+#include <Core/Types.hpp>
 #include <Core/Containers.hpp>
 #include <cstdint>
-#include <deque>
 #include <optional>
 #include <random>
-#include <vector>
 
 namespace Ursa::Demo
 {
@@ -21,50 +20,50 @@ struct Cell
 
 enum class Direction
 {
-	up,
-	down,
-	left,
-	right
+	Up,
+	Down,
+	Left,
+	Right
 };
 enum class GameStatus
 {
-	running,
-	lost,
-	won
+	Running,
+	Lost,
+	Won
 };
 
 struct SnakeConfig
 {
 	int width = 16;
 	int height = 16;
-	uint32_t seed = 1;
+	Ursa::UInt32 seed = 1;
 	Ursa::Vector<Cell> initialBody;
-	Direction initialDirection = Direction::right;
+	Direction initialDirection = Direction::Right;
 	std::optional<Cell> initialFood;
 };
 
 class FixedStepClock
 {
 public:
-	explicit FixedStepClock(double intervalSeconds = 0.18);
+	explicit FixedStepClock(Ursa::Float64 intervalSeconds = 0.18);
 
-	int Advance(double deltaSeconds);
+	int Advance(Ursa::Float64 deltaSeconds);
 
 	void Reset();
 
 private:
-	double interval;
-	double accumulated = 0.0;
+	Ursa::Float64 interval;
+	Ursa::Float64 accumulated = 0.0;
 };
 
 class SnakeGame
 {
 public:
-	explicit SnakeGame(SnakeConfig config = {});
+	explicit SnakeGame(SnakeConfig initialConfig = {});
 
 	void Reset();
 
-	void QueueDirection(Direction direction);
+	void QueueDirection(Direction requestedDirection);
 
 	void Step();
 
@@ -90,8 +89,8 @@ private:
 	Ursa::Deque<Cell> body;
 	std::optional<Cell> food;
 	std::optional<Direction> pendingDirection;
-	Direction direction = Direction::right;
-	GameStatus status = GameStatus::running;
+	Direction direction = Direction::Right;
+	GameStatus status = GameStatus::Running;
 	int score = 0;
 };
 } // namespace Ursa::Demo

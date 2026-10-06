@@ -1,3 +1,4 @@
+#include <Core/Types.hpp>
 #include <Core/Containers.hpp>
 #include <Core/StringInterop.hpp>
 #include <Application/Application.hpp>
@@ -10,7 +11,6 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 namespace
 {
@@ -33,7 +33,7 @@ void done(Ursa::Result<void> result)
 
 Ursa::MaterialTexturePtr CheckerTexture()
 {
-	Ursa::Vector<uint8_t> pixels;
+	Ursa::Vector<Ursa::UInt8> pixels;
 	pixels.reserve(8 * 8 * 4);
 	for (int y = 0; y < 8; ++y)
 	{
@@ -46,24 +46,24 @@ Ursa::MaterialTexturePtr CheckerTexture()
 			pixels.push_back(255);
 		}
 	}
-	return Take(Ursa::MaterialTexture::Create(8, 8, Ursa::TextureColorSpace::srgb, std::move(pixels)));
+	return Take(Ursa::MaterialTexture::Create(8, 8, Ursa::TextureColorSpace::Srgb, std::move(pixels)));
 }
 
 Ursa::MaterialTexturePtr BrushedNormal()
 {
-	Ursa::Vector<uint8_t> pixels;
+	Ursa::Vector<Ursa::UInt8> pixels;
 	pixels.reserve(8 * 8 * 4);
 	for (int y = 0; y < 8; ++y)
 	{
 		for (int x = 0; x < 8; ++x)
 		{
-			pixels.push_back(static_cast<uint8_t>(x % 2 == 0 ? 145 : 110));
+			pixels.push_back(static_cast<Ursa::UInt8>(x % 2 == 0 ? 145 : 110));
 			pixels.push_back(128);
 			pixels.push_back(254);
 			pixels.push_back(255);
 		}
 	}
-	return Take(Ursa::MaterialTexture::Create(8, 8, Ursa::TextureColorSpace::linear, std::move(pixels)));
+	return Take(Ursa::MaterialTexture::Create(8, 8, Ursa::TextureColorSpace::Linear, std::move(pixels)));
 }
 
 class MaterialShowcase final : public Ursa::Application
@@ -75,18 +75,18 @@ private:
 		{
 			scene = std::make_shared<Ursa::Scene>();
 			done(scene->SetAmbientLight({0.8f, 0.9f, 1.0f, 1.0f}, 0.3f));
-			const auto cameraNode = Take(scene->CreateNode());
+			const auto cameraNode = Take(scene->CreateGameObject());
 			Ursa::LocalTransform cameraPose;
 			cameraPose.position = {0, 1.4f, 9};
 			cameraPose.rotation = Ursa::Quat::FromAxisAngle({1, 0, 0}, -std::atan2(1.4f, 9.0f));
 			done(scene->SetLocalTransform(cameraNode, cameraPose));
 			done(scene->SetActiveCamera(Take(scene->AddComponent<Ursa::CameraComponent>(cameraNode))));
 
-			const auto sunNode = Take(scene->CreateNode());
+			const auto sunNode = Take(scene->CreateGameObject());
 			const auto sunId = Take(scene->AddComponent<Ursa::DirectionalLightComponent>(sunNode));
 			(void)sunId;
 			done(scene->FindComponent<Ursa::DirectionalLightComponent>(sunNode)->SetIntensity(3.0f));
-			const auto lampNode = Take(scene->CreateNode());
+			const auto lampNode = Take(scene->CreateGameObject());
 			Ursa::LocalTransform lampPose;
 			lampPose.position = {2.0f, 2.5f, 3.0f};
 			done(scene->SetLocalTransform(lampNode, lampPose));
@@ -96,24 +96,24 @@ private:
 			done(lamp->SetIntensity(35.0f));
 			done(lamp->SetRange(9.0f));
 
-			auto unlit = std::make_shared<Ursa::MaterialInstance>(Ursa::MaterialType::unlit);
-			done(unlit->SetTexture(Ursa::MaterialTextureSlot::baseColor, CheckerTexture()));
+			auto unlit = std::make_shared<Ursa::MaterialInstance>(Ursa::MaterialType::Unlit);
+			done(unlit->SetTexture(Ursa::MaterialTextureSlot::BaseColor, CheckerTexture()));
 			done(unlit->SetSampler({false, true}));
-			auto ceramic = std::make_shared<Ursa::MaterialInstance>(Ursa::MaterialType::pbrMetallicRoughness);
+			auto ceramic = std::make_shared<Ursa::MaterialInstance>(Ursa::MaterialType::PbrMetallicRoughness);
 			done(ceramic->SetBaseColor({0.12f, 0.45f, 0.95f, 1.0f}));
 			done(ceramic->SetMetallic(0.0f));
 			done(ceramic->SetRoughness(0.75f));
-			done(ceramic->SetTexture(Ursa::MaterialTextureSlot::normal, BrushedNormal()));
-			auto gold = std::make_shared<Ursa::MaterialInstance>(Ursa::MaterialType::pbrMetallicRoughness);
+			done(ceramic->SetTexture(Ursa::MaterialTextureSlot::Normal, BrushedNormal()));
+			auto gold = std::make_shared<Ursa::MaterialInstance>(Ursa::MaterialType::PbrMetallicRoughness);
 			done(gold->SetBaseColor({0.95f, 0.55f, 0.16f, 1.0f}));
 			done(gold->SetMetallic(1.0f));
 			done(gold->SetRoughness(0.25f));
-			done(gold->SetTexture(Ursa::MaterialTextureSlot::normal, BrushedNormal()));
+			done(gold->SetTexture(Ursa::MaterialTextureSlot::Normal, BrushedNormal()));
 
 			const auto addBox = [&](Ursa::Vec3 position, Ursa::Vec3 scale,
 			                        std::shared_ptr<Ursa::MaterialInstance> material, Ursa::Color color = {})
 			{
-				const auto node = Take(scene->CreateNode());
+				const auto node = Take(scene->CreateGameObject());
 				Ursa::LocalTransform pose;
 				pose.position = position;
 				pose.scale = scale;
@@ -142,7 +142,7 @@ int main(int argc, char** argv)
 	try
 	{
 		bool visible = true;
-		uint32_t frameLimit = 0;
+		Ursa::UInt32 frameLimit = 0;
 		for (int i = 1; i < argc; ++i)
 		{
 			const Ursa::String argument = argv[i];
@@ -152,7 +152,7 @@ int main(int argc, char** argv)
 			}
 			else if (argument == "--frames" && i + 1 < argc)
 			{
-				frameLimit = static_cast<uint32_t>(std::stoul(argv[++i]));
+				frameLimit = static_cast<Ursa::UInt32>(std::stoul(argv[++i]));
 			}
 			else
 			{

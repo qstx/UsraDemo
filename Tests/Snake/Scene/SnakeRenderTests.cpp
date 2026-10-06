@@ -1,3 +1,4 @@
+#include <Core/Types.hpp>
 #include <Core/StringInterop.hpp>
 #include <Core/Containers.hpp>
 #include "SnakeScene.hpp"
@@ -7,7 +8,6 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 namespace
 {
@@ -28,15 +28,15 @@ void done(Ursa::Result<void> result)
 	}
 }
 
-void WriteBmp(const std::string& path, const Ursa::Vector<uint8_t>& rgba, uint32_t width, uint32_t height)
+void WriteBmp(const std::string& path, const Ursa::Vector<Ursa::UInt8>& rgba, Ursa::UInt32 width, Ursa::UInt32 height)
 {
-	const uint32_t fileSize = 54 + width * height * 4;
-	Ursa::Vector<uint8_t> header(54);
-	const auto number = [&](size_t offset, uint32_t value)
+	const Ursa::UInt32 fileSize = 54 + width * height * 4;
+	Ursa::Vector<Ursa::UInt8> header(54);
+	const auto number = [&](Ursa::Size offset, Ursa::UInt32 value)
 	{
 		for (int byte = 0; byte < 4; ++byte)
 		{
-			header[offset + byte] = static_cast<uint8_t>(value >> (byte * 8));
+			header[offset + byte] = static_cast<Ursa::UInt8>(value >> (byte * 8));
 		}
 	};
 	header[0] = 'B';
@@ -57,9 +57,9 @@ void WriteBmp(const std::string& path, const Ursa::Vector<uint8_t>& rgba, uint32
 	output.write(reinterpret_cast<const char*>(header.data()), static_cast<std::streamsize>(header.size()));
 	for (int y = static_cast<int>(height) - 1; y >= 0; --y)
 	{
-		for (uint32_t x = 0; x < width; ++x)
+		for (Ursa::UInt32 x = 0; x < width; ++x)
 		{
-			const size_t offset = (static_cast<size_t>(y) * width + x) * 4;
+			const Ursa::Size offset = (static_cast<Ursa::Size>(y) * width + x) * 4;
 			const char bgra[4]{static_cast<char>(rgba[offset + 2]), static_cast<char>(rgba[offset + 1]),
 			                   static_cast<char>(rgba[offset]), static_cast<char>(rgba[offset + 3])};
 			output.write(bgra, 4);
@@ -76,8 +76,8 @@ int main(int argc, char** argv)
 {
 	try
 	{
-		constexpr uint32_t width = 800;
-		constexpr uint32_t height = 450;
+		constexpr Ursa::UInt32 width = 800;
+		constexpr Ursa::UInt32 height = 450;
 		Ursa::Demo::SnakeConfig config;
 		config.initialFood = Ursa::Demo::Cell{10, 8};
 		Ursa::Demo::SnakeGame game(config);
@@ -88,29 +88,29 @@ int main(int argc, char** argv)
 		auto device = Take(Ursa::Rhi::CreateDevice(desc));
 		auto renderer = Take(Ursa::Renderer3D::Create(device));
 		auto color = Take(device->CreateTexture(
-		    {width, height, Ursa::Rhi::Format::rgbA8Unorm,
-		     Ursa::Rhi::TextureUsage::colorAttachment | Ursa::Rhi::TextureUsage::transferSource}));
+		    {width, height, Ursa::Rhi::Format::RgbA8Unorm,
+		     Ursa::Rhi::TextureUsage::ColorAttachment | Ursa::Rhi::TextureUsage::TransferSource}));
 		Ursa::Scene scene;
 		done(Ursa::Demo::SetupSnakeScene(scene, game));
 		scene.BeginFrame();
 		done(scene.LateUpdate({}));
-		const auto data = Take(scene.CollectRenderData(static_cast<float>(width) / height));
+		const auto data = Take(scene.CollectRenderData(static_cast<Ursa::Float32>(width) / height));
 		done(Take(renderer->RenderOffscreenModels(color, data.viewProjection, data.boxes))->Wait());
 		auto readback =
-		    Take(device->CreateBuffer({static_cast<size_t>(width) * height * 4,
-		                               Ursa::Rhi::BufferUsage::transferDestination, Ursa::Rhi::Memory::readback}));
+		    Take(device->CreateBuffer({static_cast<Ursa::Size>(width) * height * 4,
+		                               Ursa::Rhi::BufferUsage::TransferDestination, Ursa::Rhi::Memory::Readback}));
 		auto command = Take(device->CreateCommandList());
 		done(command->Begin());
-		done(command->Barrier(readback, Ursa::Rhi::ResourceState::undefined,
-		                      Ursa::Rhi::ResourceState::transferDestination));
+		done(command->Barrier(readback, Ursa::Rhi::ResourceState::Undefined,
+		                      Ursa::Rhi::ResourceState::TransferDestination));
 		done(command->CopyTextureToBuffer(color, readback));
 		done(command->End());
 		done(Take(device->Submit(command))->Wait());
-		Ursa::Vector<uint8_t> pixels(static_cast<size_t>(width) * height * 4);
+		Ursa::Vector<Ursa::UInt8> pixels(static_cast<Ursa::Size>(width) * height * 4);
 		done(readback->Read(0, pixels.data(), pixels.size()));
-		size_t snakePixels = 0;
-		size_t foodPixels = 0;
-		for (size_t i = 0; i < pixels.size(); i += 4)
+		Ursa::Size snakePixels = 0;
+		Ursa::Size foodPixels = 0;
+		for (Ursa::Size i = 0; i < pixels.size(); i += 4)
 		{
 			if (pixels[i + 1] > 80 && pixels[i + 1] > pixels[i] * 1.3f && pixels[i + 1] > pixels[i + 2] * 1.2f)
 			{

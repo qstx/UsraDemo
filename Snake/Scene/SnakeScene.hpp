@@ -2,7 +2,6 @@
 #include <Core/Containers.hpp>
 #include "SnakeGame.hpp"
 #include <Renderer3D/Renderer3D.hpp>
-#include <vector>
 #include <Scene/Scene.hpp>
 
 namespace Ursa::Demo

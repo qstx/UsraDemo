@@ -1,3 +1,4 @@
+#include <Core/Types.hpp>
 #include <Core/Containers.hpp>
 #include "SnakeGame.hpp"
 #include <algorithm>
@@ -11,24 +12,24 @@ namespace
 {
 bool Opposite(Direction a, Direction b)
 {
-	return (a == Direction::up && b == Direction::down) || (a == Direction::down && b == Direction::up) ||
-	       (a == Direction::left && b == Direction::right) || (a == Direction::right && b == Direction::left);
+	return (a == Direction::Up && b == Direction::Down) || (a == Direction::Down && b == Direction::Up) ||
+	       (a == Direction::Left && b == Direction::Right) || (a == Direction::Right && b == Direction::Left);
 }
 
 Cell moved(Cell cell, Direction direction)
 {
 	switch (direction)
 	{
-		case Direction::up:
+		case Direction::Up:
 			--cell.z;
 			break;
-		case Direction::down:
+		case Direction::Down:
 			++cell.z;
 			break;
-		case Direction::left:
+		case Direction::Left:
 			--cell.x;
 			break;
-		case Direction::right:
+		case Direction::Right:
 			++cell.x;
 			break;
 	}
@@ -36,7 +37,7 @@ Cell moved(Cell cell, Direction direction)
 }
 } // namespace
 
-FixedStepClock::FixedStepClock(double intervalSeconds) : interval(intervalSeconds)
+FixedStepClock::FixedStepClock(Ursa::Float64 intervalSeconds) : interval(intervalSeconds)
 {
 	if (intervalSeconds <= 0.0)
 	{
@@ -44,7 +45,7 @@ FixedStepClock::FixedStepClock(double intervalSeconds) : interval(intervalSecond
 	}
 }
 
-int FixedStepClock::Advance(double deltaSeconds)
+int FixedStepClock::Advance(Ursa::Float64 deltaSeconds)
 {
 	if (deltaSeconds < 0.0)
 	{
@@ -65,7 +66,7 @@ void FixedStepClock::Reset()
 	accumulated = 0.0;
 }
 
-SnakeGame::SnakeGame(SnakeConfig config) : config(std::move(config)), random(config.seed)
+SnakeGame::SnakeGame(SnakeConfig initialConfig) : config(std::move(initialConfig)), random(config.seed)
 {
 	if (config.width < 2 || config.height < 2)
 	{
@@ -81,7 +82,7 @@ SnakeGame::SnakeGame(SnakeConfig config) : config(std::move(config)), random(con
 		const int z = config.height / 2;
 		config.initialBody = {{x, z}, {x - 1, z}, {x - 2, z}};
 	}
-	for (size_t i = 0; i < config.initialBody.size(); ++i)
+	for (Ursa::Size i = 0; i < config.initialBody.size(); ++i)
 	{
 		const Cell cell = config.initialBody[i];
 		if (cell.x < 0 || cell.x >= config.width || cell.z < 0 || cell.z >= config.height ||
@@ -110,7 +111,7 @@ void SnakeGame::Reset()
 	direction = config.initialDirection;
 	pendingDirection.reset();
 	score = 0;
-	status = GameStatus::running;
+	status = GameStatus::Running;
 	food = config.initialFood;
 	if (!food)
 	{
@@ -118,18 +119,18 @@ void SnakeGame::Reset()
 	}
 }
 
-void SnakeGame::QueueDirection(Direction direction)
+void SnakeGame::QueueDirection(Direction requestedDirection)
 {
-	if (status != GameStatus::running || pendingDirection || Opposite(direction, direction))
+	if (status != GameStatus::Running || pendingDirection || Opposite(requestedDirection, direction))
 	{
 		return;
 	}
-	pendingDirection = direction;
+	pendingDirection = requestedDirection;
 }
 
 void SnakeGame::Step()
 {
-	if (status != GameStatus::running)
+	if (status != GameStatus::Running)
 	{
 		return;
 	}
@@ -141,7 +142,7 @@ void SnakeGame::Step()
 	const Cell next = moved(body.front(), direction);
 	if (next.x < 0 || next.x >= config.width || next.z < 0 || next.z >= config.height)
 	{
-		status = GameStatus::lost;
+		status = GameStatus::Lost;
 		return;
 	}
 	const bool eating = food && next == *food;
@@ -152,7 +153,7 @@ void SnakeGame::Step()
 	}
 	if (std::find(body.begin(), occupiedEnd, next) != occupiedEnd)
 	{
-		status = GameStatus::lost;
+		status = GameStatus::Lost;
 		return;
 	}
 	body.push_front(next);
@@ -219,10 +220,10 @@ void SnakeGame::SpawnFood()
 	if (freeCells.empty())
 	{
 		food.reset();
-		status = GameStatus::won;
+		status = GameStatus::Won;
 		return;
 	}
-	std::uniform_int_distribution<size_t> distribution(0, freeCells.size() - 1);
+	std::uniform_int_distribution<Ursa::Size> distribution(0, freeCells.size() - 1);
 	food = freeCells[distribution(random)];
 }
 } // namespace Ursa::Demo

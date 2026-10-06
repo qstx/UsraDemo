@@ -1,11 +1,12 @@
+#include <Core/Types.hpp>
 #include <Core/Containers.hpp>
 #include "SnakePresentation.hpp"
 #include <Core/StringInterop.hpp>
 
 namespace Ursa::Demo
 {
-SnakePresentation::SnakePresentation(SnakeGame& game, NodeId root, bool smokeGameplay)
-    : game(game), root(root), smokeGameplay(smokeGameplay)
+SnakePresentation::SnakePresentation(SnakeGame& snakeGame, GameObject::Ptr rootObject, bool enableGameplaySmoke)
+    : game(snakeGame), root(rootObject), smokeGameplay(enableGameplaySmoke)
 {
 }
 
@@ -40,7 +41,7 @@ Result<void> SnakePresentation::SyncBody()
 {
 	while (segments.size() > game.GetBody().size())
 	{
-		auto removed = GetScene().DestroyNode(segments.back());
+		auto removed = GetScene().DestroyGameObject(segments.back());
 		if (!removed)
 		{
 			return removed;
@@ -49,7 +50,7 @@ Result<void> SnakePresentation::SyncBody()
 	}
 	while (segments.size() < game.GetBody().size())
 	{
-		auto node = GetScene().CreateNode(root);
+		auto node = GetScene().CreateGameObject(root);
 		if (!node)
 		{
 			return Result<void>::Failure(node.error);
@@ -62,10 +63,10 @@ Result<void> SnakePresentation::SyncBody()
 		}
 		segments.push_back(node.value);
 	}
-	size_t index = 0;
+	Ursa::Size index = 0;
 	for (Cell cell : game.GetBody())
 	{
-		const NodeId node = segments[index];
+		const GameObject::Ptr node = segments[index];
 		auto transformed = GetScene().SetLocalTransform(node, CellTransform(cell, 0.34f, 0.84f));
 		if (!transformed)
 		{
@@ -86,7 +87,7 @@ Result<void> SnakePresentation::SyncFood()
 	{
 		if (foodNode)
 		{
-			auto removed = GetScene().DestroyNode(foodNode);
+			auto removed = GetScene().DestroyGameObject(foodNode);
 			if (!removed)
 			{
 				return removed;
@@ -97,7 +98,7 @@ Result<void> SnakePresentation::SyncFood()
 	}
 	if (!foodNode)
 	{
-		auto node = GetScene().CreateNode(root);
+		auto node = GetScene().CreateGameObject(root);
 		if (!node)
 		{
 			return Result<void>::Failure(node.error);
@@ -119,11 +120,11 @@ void SnakePresentation::UpdateTitle(Window* window)
 		return;
 	}
 	String newTitle = "Ursa Snake | Score: " + ToUrsaString(std::to_string(game.GetScore()));
-	if (game.GetStatus() == GameStatus::lost)
+	if (game.GetStatus() == GameStatus::Lost)
 	{
 		newTitle += " | Game Over";
 	}
-	else if (game.GetStatus() == GameStatus::won)
+	else if (game.GetStatus() == GameStatus::Won)
 	{
 		newTitle += " | You Win";
 	}
@@ -135,11 +136,12 @@ void SnakePresentation::UpdateTitle(Window* window)
 	}
 }
 
-LocalTransform SnakePresentation::CellTransform(Cell cell, float height, float size) const
+LocalTransform SnakePresentation::CellTransform(Cell cell, Ursa::Float32 height, Ursa::Float32 size) const
 {
 	LocalTransform transform;
-	transform.position = {static_cast<float>(cell.x) - static_cast<float>(game.GetWidth() - 1) * 0.5f, height,
-	                      static_cast<float>(cell.z) - static_cast<float>(game.GetHeight() - 1) * 0.5f};
+	transform.position = {static_cast<Ursa::Float32>(cell.x) - static_cast<Ursa::Float32>(game.GetWidth() - 1) * 0.5f,
+	                      height,
+	                      static_cast<Ursa::Float32>(cell.z) - static_cast<Ursa::Float32>(game.GetHeight() - 1) * 0.5f};
 	transform.scale = {size, size, size};
 	return transform;
 }

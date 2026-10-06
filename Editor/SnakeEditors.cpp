@@ -9,7 +9,7 @@ namespace Ursa::Demo
 Result<void> RegisterSnakeEditors(Editor::ComponentEditors& editors)
 {
 	auto controller = editors.RegisterEditor("demo.SnakeController",
-	                                         [](Component& component, Scene&, NodeId)
+	                                         [](Component& component, Scene&, GameObject::Ptr)
 	                                         {
 		                                         auto& value = static_cast<SnakeController&>(component);
 		                                         bool stress = value.StressWindow();
@@ -32,7 +32,7 @@ Result<void> RegisterSnakeEditors(Editor::ComponentEditors& editors)
 	}
 	return editors.RegisterEditor(
 	    "demo.SnakePresentation",
-	    [](Component& component, Scene& scene, NodeId)
+	    [](Component& component, Scene& scene, GameObject::Ptr)
 	    {
 		    auto& value = static_cast<SnakePresentation&>(component);
 		    bool changed = false;
@@ -42,13 +42,13 @@ Result<void> RegisterSnakeEditors(Editor::ComponentEditors& editors)
 			    value.SetSmokeGameplay(smoke);
 			    changed = true;
 		    }
-		    const auto currentLabel = scene.NodeLabel(value.RootNode());
+		    const auto currentLabel = scene.GameObjectName(value.RootNode());
 		    if (ImGui::BeginCombo("Root node", currentLabel ? currentLabel.value.c_str() : "Select node"))
 		    {
-			    std::function<void(NodeId)> offer = [&](NodeId candidate)
+			    std::function<void(GameObject::Ptr)> offer = [&](GameObject::Ptr candidate)
 			    {
-				    const auto label = scene.NodeLabel(candidate);
-				    const auto id = scene.NodePersistentId(candidate);
+				    const auto label = scene.GameObjectName(candidate);
+				    const auto id = scene.PersistentId(candidate);
 				    if (label && id)
 				    {
 					    ImGui::PushID(id.value.ToString().c_str());
@@ -62,13 +62,13 @@ Result<void> RegisterSnakeEditors(Editor::ComponentEditors& editors)
 				    const auto children = scene.ChildrenOf(candidate);
 				    if (children)
 				    {
-					    for (NodeId child : children.value)
+					    for (GameObject::Ptr child : children.value)
 					    {
 						    offer(child);
 					    }
 				    }
 			    };
-			    for (NodeId root : scene.RootNodes())
+			    for (GameObject::Ptr root : scene.RootGameObjects())
 			    {
 				    offer(root);
 			    }

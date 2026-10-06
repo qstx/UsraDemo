@@ -11,8 +11,8 @@ int main(int argc, char** argv)
 	const std::filesystem::path root = project / "Assets";
 	const auto scenePath = root / "Snake" / "Snake.ursascene";
 	const auto prefabPath = root / "Snake" / "Board.ursaprefab";
-	auto sceneDocument = Ursa::ReadJsonResource(scenePath, Ursa::ResourceKind::scene);
-	auto prefabDocument = Ursa::ReadJsonResource(prefabPath, Ursa::ResourceKind::prefab);
+	auto sceneDocument = Ursa::ReadJsonResource(scenePath, Ursa::ResourceKind::Scene);
+	auto prefabDocument = Ursa::ReadJsonResource(prefabPath, Ursa::ResourceKind::Prefab);
 	if (!sceneDocument || !prefabDocument || !sceneDocument.value.contains("instances") ||
 	    sceneDocument.value["instances"].size() != 1 ||
 	    sceneDocument.value["instances"][0]["prefab"] != prefabDocument.value["id"])
@@ -42,7 +42,7 @@ int main(int argc, char** argv)
 		std::cerr << loaded.error.c_str() << '\n';
 		return 1;
 	}
-	auto roots = loaded.value.scene->RootNodes();
+	auto roots = loaded.value.scene->RootGameObjects();
 	auto frame = loaded.value.scene->CollectRenderData(16.0f / 9.0f);
 	if (roots.size() != 1 || !loaded.value.scene->FindComponent<Ursa::Demo::SnakeController>(roots.front()) || !frame ||
 	    frame.value.boxes.size() != 257)

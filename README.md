@@ -47,15 +47,19 @@ Run `UrsaMaterialShowcase` to see three boxes: a programmatically generated Unli
 
 ## 3D Snake
 
+`UrsaSnake` is a Player: it loads resources from `Assets/` under its working directory and does not accept `--project`. Set the working directory to the Demo repository, then run `& .\build\Debug\UrsaSnake.exe` without arguments. Visual Studio, the VS Code Snake launch configuration, and the three Snake window smoke tests use this working directory. A missing assets directory produces a resource loading error; the Player does not search other directories. Editor launchers still require `--project`.
+
+CMake Tools quick debugging uses the Demo working directory with no arguments. To debug an Editor in VS Code, select `Debug UrsaEditor` or `Debug UrsaDemoEditor` from `launch.json`; those configurations supply the project path and, for the Demo Editor, the initial scene.
+
 The snake automatically moves across a 16-by-16 board at a fixed simulation interval. Turn with the arrow keys or WASD. Direct reversal is ignored, and one turn is accepted per grid step. Eating orange food grows the snake and increases the score by one. Running into the board edge or the snake's body ends the round. Filling every cell wins. Press Space to restart at any time, or Escape to close the window.
 
 The board is stored in `Assets/Snake/Board.ursaprefab`; `Assets/Snake/Snake.ursascene` references it and stores the camera and gameplay components. The normal `UrsaSnake` launch loads these files. Food and snake segments are generated as colored boxes by the presentation component and shown by the saved camera. The current score, result and controls appear in the window title. The game has no external model or texture images.
 
-`SnakeApp` loads a linked Engine `Scene` during normal startup. A root node owns the `SnakeController` and `SnakePresentation` behavior components. The board base and tiles sit under an instanced board Prefab; separate nodes hold the camera, food, and each snake segment. `SnakeController` reads the frame's input snapshot and advances the pure `SnakeGame` rules from fixed updates at the game's 0.18-second move interval. `SnakePresentation` runs after fixed updates, creates or removes segment and food nodes, updates their transforms, and refreshes the window title. The Engine gathers their active `BoxRenderComponent` instances and renders through the selected `CameraComponent`. `UrsaSnakeAssetTests` checks the committed scene and Prefab link; `UrsaSnakeAssetWindowSmoke` loads and renders them. The stress/gameplay smoke path still constructs a small procedural board.
+`SnakeApp` loads a linked Engine `Scene` during normal startup. A root GameObject owns the `SnakeController` and `SnakePresentation` behavior components. The board base and tiles sit under an instanced board Prefab; separate GameObjects hold the camera, food, and each snake segment. `SnakeController` reads the frame's input snapshot and advances the pure `SnakeGame` rules from fixed updates at the game's 0.18-second move interval. `SnakePresentation` runs after fixed updates, creates or removes segment and food GameObjects, updates their transforms, and refreshes the window title. The Engine gathers their active `BoxRenderComponent` instances and renders through the selected `CameraComponent`. `UrsaSnakeAssetTests` checks the committed scene and Prefab link; `UrsaSnakeAssetWindowSmoke` loads and renders them. The stress/gameplay smoke path still constructs a small procedural board.
 
 ## Serialized Snake components
 
-`Snake/Scene/SnakeSerialization.cpp` registers `demo.SnakeController` and `demo.SnakePresentation` with stable version 1 names. Their saved fields include controller options and the presentation root's persistent node ID. The live `SnakeGame&` is supplied again at load time and is never written to the scene file:
+`Snake/Scene/SnakeSerialization.cpp` registers `demo.SnakeController` and `demo.SnakePresentation` with stable version 1 names. Their saved fields include controller options and the presentation root's persistent GameObject ID. The live `SnakeGame&` is supplied again at load time and is never written to the scene file:
 
 ```cpp
 #include "SnakeSerialization.hpp"
@@ -64,12 +68,12 @@ The board is stored in `Assets/Snake/Board.ursaprefab`; `Assets/Snake/Snake.ursa
 void loadSnake(const std::filesystem::path &file, Ursa::ResourceSession &resources,
                Ursa::Demo::SnakeGame &game) {
     Ursa::ComponentRegistry registry;
-    if (!Ursa::registerBuiltinComponents(registry) ||
-        !Ursa::Demo::registerSnakeComponents(registry))
+    if (!Ursa::RegisterBuiltinComponents(registry) ||
+        !Ursa::Demo::RegisterSnakeComponents(registry))
         return;
     Ursa::ComponentLoadContext context(resources);
-    context.provide(game);
-    auto scene = Ursa::loadSceneResource(file, registry, context);
+    context.Provide(game);
+    auto scene = Ursa::LoadSceneResource(file, registry, context);
 }
 ```
 
@@ -85,28 +89,28 @@ With a scene open, click **Run** in the top bar to simulate the current in-memor
 
 ## Reusing a Prefab
 
-A board tile or other subtree can be saved once with `savePrefabResource` and placed in several scenes with `addPrefabInstance`. A placement keeps its source ID and its own instance ID. After loading a linked scene, this sequence overrides a tile's X position, saves it, and later removes the override so the next explicit reload inherits the current source:
+A board tile or other subtree can be saved once as a PrefabAsset with `SavePrefabResource` and placed in several scenes with `AddPrefabInstance`. A placement keeps its source ID and its own instance ID. After loading a linked scene, this sequence overrides a tile's X position, saves it, and later removes the override so the next explicit reload inherits the current source:
 
 ```cpp
 #include <Serialization/PrefabResource.hpp>
 
 void moveTile(Ursa::LinkedSceneResource &level, const std::filesystem::path &scenePath,
               Ursa::ComponentRegistry &registry, Ursa::ComponentLoadContext &context,
-              Ursa::ResourceId instanceId, Ursa::ResourceId tileNodeId) {
-    if (!Ursa::setPrefabPropertyOverride(level, instanceId, tileNodeId,
-                                          "/transform/position/0", 3.0f) ||
-        !Ursa::saveLinkedSceneResource(scenePath, level, registry))
+              Ursa::ResourceId instanceId, Ursa::ResourceId tileGameObjectId) {
+    if (!Ursa::SetPrefabPropertyOverride(level, instanceId, tileGameObjectId,
+                                          "/localTransform/position/0", 3.0f) ||
+        !Ursa::SaveLinkedSceneResource(scenePath, level, registry))
         return;
-    if (!Ursa::reloadLinkedSceneResource(scenePath, registry, context, level))
+    if (!Ursa::ReloadLinkedSceneResource(scenePath, registry, context, level))
         return;
-    if (!Ursa::clearPrefabPropertyOverride(level, instanceId, tileNodeId,
-                                            "/transform/position/0") ||
-        !Ursa::saveLinkedSceneResource(scenePath, level, registry))
+    if (!Ursa::ClearPrefabPropertyOverride(level, instanceId, tileGameObjectId,
+                                            "/localTransform/position/0") ||
+        !Ursa::SaveLinkedSceneResource(scenePath, level, registry))
         return;
-    Ursa::reloadLinkedSceneResource(scenePath, registry, context, level);
+    Ursa::ReloadLinkedSceneResource(scenePath, registry, context, level);
 }
 ```
 
-The context's `ResourceSession` must include both Engine and Demo resource roots. For changed material files, create a refreshed session and load a candidate before replacing the running scene. Structural overrides use `setPrefabStructureOverride`; see the Engine README and `UrsaPrefabTests` for add, delete, reparent, owner, and order examples.
+The context's `ResourceSession` must include both Engine and Demo resource roots. For changed material files, create a refreshed session and load a candidate before replacing the running scene. Structural overrides use `SetPrefabStructureOverride`; see the Engine README and `UrsaPrefabTests` for add, delete, reparent, owner, and order examples.
 
 The engine and Demo are separate Git repositories. Demo does not record an engine commit; configure it with a compatible UrsaEngine checkout. Follow the engine repository's `.clang-format` rules when editing C++ code.
