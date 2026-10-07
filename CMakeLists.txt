@@ -54,7 +54,7 @@ add_custom_target(UrsaDemoPackage
   COMMAND UrsaPak --engine "${URSA_ENGINE_DIR}/Assets"
     --engine-generated "${URSA_ASSET_MIRROR_DIR}" --project "${CMAKE_CURRENT_SOURCE_DIR}/Assets"
     --output "${CMAKE_CURRENT_BINARY_DIR}/package/Content.pak"
-  DEPENDS UrsaPak UrsaEngine VERBATIM)
+  DEPENDS UrsaPak UrsaEngine UrsaEngineShaderAssets VERBATIM)
 if(TARGET UrsaEditorCore)
   add_dependencies(UrsaDemoPackage UrsaEditorCore)
 endif()
@@ -71,6 +71,7 @@ file(GLOB URSA_SNAKE_APP_SOURCES CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/Snake/*.hpp")
 add_executable(UrsaSnake ${URSA_SNAKE_APP_SOURCES})
 target_link_libraries(UrsaSnake PRIVATE UrsaSnakeScene)
+add_dependencies(UrsaSnake UrsaEngineShaderAssets)
 set_target_properties(UrsaSnake PROPERTIES
   VS_DEBUGGER_COMMAND_ARGUMENTS ""
   VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -83,6 +84,7 @@ set_tests_properties(UrsaSnakeWindowSmoke UrsaSnakeSerializedWindowSmoke UrsaSna
 if(TARGET Ursa::Editor)
   add_executable(UrsaDemoEditor Editor/Main.cpp Editor/SnakeEditors.cpp Editor/SnakeEditors.hpp)
   target_link_libraries(UrsaDemoEditor PRIVATE Ursa::Editor UrsaSnakeScene)
+  add_dependencies(UrsaDemoEditor UrsaEngineShaderAssets)
   set_target_properties(UrsaDemoEditor PROPERTIES
     VS_DEBUGGER_COMMAND_ARGUMENTS "--project \"${CMAKE_CURRENT_SOURCE_DIR}\" --scene Snake/Snake.ursascene"
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -103,6 +105,7 @@ file(GLOB URSA_MATERIAL_SHOWCASE_SOURCES CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/Material/*.hpp")
 add_executable(UrsaMaterialShowcase ${URSA_MATERIAL_SHOWCASE_SOURCES})
 target_link_libraries(UrsaMaterialShowcase PRIVATE Ursa::Engine)
+add_dependencies(UrsaMaterialShowcase UrsaEngineShaderAssets)
 add_test(NAME UrsaMaterialWindowSmoke COMMAND UrsaMaterialShowcase --hidden --frames 20)
 
 add_executable(UrsaSnakeSceneTests Tests/Snake/Scene/SnakeSceneTests.cpp)
@@ -119,6 +122,7 @@ add_test(NAME UrsaSnakeSerializationTests COMMAND UrsaSnakeSerializationTests)
 
 add_executable(UrsaSnakeRenderTests Tests/Snake/Scene/SnakeRenderTests.cpp)
 target_link_libraries(UrsaSnakeRenderTests PRIVATE UrsaSnakeScene)
+add_dependencies(UrsaSnakeRenderTests UrsaEngineShaderAssets)
 add_test(NAME UrsaSnakeRenderTests COMMAND UrsaSnakeRenderTests)
 
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES

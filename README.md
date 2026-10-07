@@ -45,6 +45,10 @@ Content mounts remain read only in runtime and packaged launches.
 
 Run `UrsaMaterialShowcase` to see three boxes: a programmatically generated Unlit checker, a blue rough PBR surface with a generated normal map, and a smoother metallic gold surface. A directional light, warm point light, and adjustable ambient fill are scene components. The floor uses the old box-color path, so the showcase exercises both paths together. The window closes normally; `--hidden --frames 20` runs a short smoke test. No image files are loaded. Material and lighting API details are in the Engine README.
 
+### Shader-backed materials
+
+New project materials can reference a Shader by `ResourceId`, set declared fields with `MaterialInstance::SetPropertyValue`, select declared keyword variants with `SetKeywordEnabled`, and save through `SaveMaterialResource`. Engine documents the API and `Engine/Tests/Material/MaterialHeaderSmoke.cpp` plus `Demo/Tests/Integration/EngineHeaderSmoke.cpp` compile the public usage. Existing Unlit/PBR material files migrate in memory and convert to the version 2 Shader-backed format only after an explicit save. See [Engine Shader Materials](../Engine/Docs/ShaderMaterials.md) and [Shader authoring](../Engine/Docs/ShaderAuthoring.md).
+
 ## 3D Snake
 
 `UrsaSnake` is a Player: it loads resources from `Assets/` under its working directory and does not accept `--project`. Set the working directory to the Demo repository, then run `& .\build\Debug\UrsaSnake.exe` without arguments. Visual Studio, the VS Code Snake launch configuration, and the three Snake window smoke tests use this working directory. A missing assets directory produces a resource loading error; the Player does not search other directories. Editor launchers still require `--project`.

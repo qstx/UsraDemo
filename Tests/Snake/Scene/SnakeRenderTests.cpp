@@ -121,13 +121,14 @@ int main(int argc, char** argv)
 				++foodPixels;
 			}
 		}
-		if (snakePixels < 100 || foodPixels < 20)
-		{
-			throw std::runtime_error("Rendered snake or food pixels were missing");
-		}
 		if (argc == 2)
 		{
 			WriteBmp(argv[1], pixels, width, height);
+		}
+		if (snakePixels < 100 || foodPixels < 20)
+		{
+			throw std::runtime_error("Rendered snake or food pixels were missing (snake=" +
+			                         std::to_string(snakePixels) + ", food=" + std::to_string(foodPixels) + ")");
 		}
 		renderer.reset();
 		done(device->WaitIdle());
