@@ -10,7 +10,7 @@ From a configured Demo build, `cmake --build build --config Debug --target UrsaF
 
 `Snake/` contains the game entry point, with rules and scene code in `Snake/Game/` and `Snake/Scene/`; `Material/` contains the material showcase entry point. Each header sits beside its source file. Tests are grouped by feature under `Tests/`.
 
-`Assets/` is the writable project asset root for the Editor, and `--project` names the project directory that contains it. From the Demo repository, run `& .\out\build\Engine\Editor\Debug\UrsaEditor.exe --project .` to browse and save Demo resources while viewing Engine built-ins as read-only. For the playable Snake scene, run `& .\out\build\Debug\UrsaDemoEditor.exe --project . --scene Snake/Snake.ursascene`; this launcher registers Snake component codecs and opens the scene directly. Both launchers require `--project` at startup. Their docked workspace shows Hierarchy, a scene viewport, Inspector, and Project; use the top Run/Stop control when editing a scene.
+`Assets/` is the writable project asset root for the Editor, and `--project` names the project directory that contains it. From the Demo repository, run `& .\build\Engine\Editor\Debug\UrsaEditor.exe --project .` to browse and save Demo resources while viewing Engine built-ins as read-only. For the playable Snake scene, run `& .\build\Debug\UrsaDemoEditor.exe --project . --scene Snake/Snake.ursascene`; this launcher registers Snake component codecs and opens the scene directly. Both launchers require `--project` at startup. Their docked workspace shows Hierarchy, a scene viewport, Inspector, and Project; use the top Run/Stop control when editing a scene.
 
 CMake discovers source files within these production directories and checks for additions or removals during a build. New test executables still need a CMake target.
 
@@ -37,9 +37,9 @@ Use `-DURSA_ENGINE_DIR="C:/path/to/Engine"` at configure time if the engine chec
 
 ## Logs
 
-The Snake game, material showcase, and Demo Editor initialize Runtime logging before opening a window. Debug builds record Debug and higher; Release builds record Info and higher. Messages go to the console and to `logs/<program>.log` beside each executable, with a 5 MiB current file and three rotated backups. For example, a Debug build writes `out/build/Debug/logs/UrsaSnake.log`. The Editor log stays outside `Assets/`, so it does not appear in the Project resource browser. Use `Ursa::Log::setLevel` to change the minimum level while running, or pass a `LogConfig` to `LogSession` to change the level, file path, and rotation limits. The Engine README documents the public API and each level's meaning.
-
-Engine collection and text APIs now use `Ursa::Vector`, `Ursa::Array`, `Ursa::Deque`, and `Ursa::String` from `<Core/Containers.hpp>`. Demo code should use these aliases for its own game state and values passed to Engine. Convert to `std::string` only at JSON, stream, or filesystem boundaries using `<Core/StringInterop.hpp>`. Rebuild Demo and Engine together after this source API change.
+Rotating logs use `user:Logs/<executable>.log`, under `%LOCALAPPDATA%/<executable>/`
+on Windows. Settings and save games use the writable `user:` mount in every mode.
+Content mounts remain read only in runtime and packaged launches.
 
 ## Material showcase
 
@@ -65,7 +65,7 @@ The board is stored in `Assets/Snake/Board.ursaprefab`; `Assets/Snake/Snake.ursa
 #include "SnakeSerialization.hpp"
 #include <Serialization/SceneResource.hpp>
 
-void loadSnake(const std::filesystem::path &file, Ursa::ResourceSession &resources,
+void LoadSnake(const Ursa::VirtualPath &file, Ursa::ResourceSession &resources,
                Ursa::Demo::SnakeGame &game) {
     Ursa::ComponentRegistry registry;
     if (!Ursa::RegisterBuiltinComponents(registry) ||
@@ -73,17 +73,17 @@ void loadSnake(const std::filesystem::path &file, Ursa::ResourceSession &resourc
         return;
     Ursa::ComponentLoadContext context(resources);
     context.Provide(game);
-    auto scene = Ursa::LoadSceneResource(file, registry, context);
+    auto scene = Ursa::LoadSceneResource(resources.Index().Filesystem(), file, registry, context);
 }
 ```
 
 Keep the game object alive for the loaded scene's lifetime. Register codecs before loading; an unknown component version fails with its file and node location. `UrsaSnakeSerializationTests` compiles this pattern, checks a scene round trip, advances the rebound game, and covers cleanup and missing-dependency errors.
 
-Run `UrsaSnake --serialized` to explicitly reload the committed linked scene before play. With `--smoke-gameplay`, the demo saves a small generated scene to a temporary resource root and reloads it; `UrsaSnakeSerializedWindowSmoke` checks that path through a hidden Vulkan window. To regenerate the initial scene and board Prefab from the procedural setup, build `UrsaSnakeAssetBake` and run `& .\out\build\Debug\UrsaSnakeAssetBake.exe . --force`. This replaces the two files, including Editor changes, so use it only when intentionally rebaking the initial assets.
+Run `UrsaSnake --serialized` to explicitly reload the committed linked scene before play. With `--smoke-gameplay`, the demo saves a small generated scene to a private memory VFS and reloads it; `UrsaSnakeSerializedWindowSmoke` checks that path through a hidden Vulkan window. To regenerate the initial scene and board Prefab from the procedural setup, build `UrsaSnakeAssetBake` and run `& .\build\Debug\UrsaSnakeAssetBake.exe . --force`. This replaces the two files, including Editor changes, so use it only when intentionally rebaking the initial assets.
 
 ## Demo Editor components and Play mode
 
-Use `UrsaDemoEditor` when opening scenes containing Snake components. Its launcher registers the Snake codecs and property editors, provides a long-lived `SnakeGame` for edit-time decoding, and creates a fresh `SnakeGame` for each Run. The controller inspector edits `stressWindow` and `smokeGameplay`; the presentation inspector edits `smokeGameplay` and its root-node reference. Save and reopen the scene to verify the fields. To add another project component, register its codec in `SnakeSerialization.cpp`, register a field editor like `SnakeEditors.cpp`, and provide any load or play services in `Editor/Main.cpp`. A component with a codec but without a property editor still round-trips unchanged.
+Use `UrsaDemoEditor` when opening scenes containing Snake components. Its launcher registers the Snake codecs and property editors, provides a long-lived `SnakeGame` for edit-time decoding, and creates a fresh `SnakeGame` for each Run. The controller inspector edits `stressWindow` and `smokeGameplay`; the presentation inspector edits `smokeGameplay` and its root-node reference. Save and reopen the scene to verify the fields. To add another project component, implement Serializable and register its factory in `SnakeSerialization.cpp`, register a field editor like `SnakeEditors.cpp`, and provide any load or play services in `Editor/Main.cpp`. A component with a codec but without a property editor still round-trips unchanged.
 
 With a scene open, click **Run** in the top bar to simulate the current in-memory scene and focus the viewport image for game keys. Click **Stop** to return to the exact edit scene. Run does not save files; saving is disabled until Stop. A scene with no active game camera still edits with the editor camera, but the play viewport reports that it needs a game camera. `UrsaSnakeEditorTests` exercises Snake fields after save/reopen, and the Engine `UrsaPlaySessionTests` exercises isolated Run/Stop.
 
@@ -94,23 +94,41 @@ A board tile or other subtree can be saved once as a PrefabAsset with `SavePrefa
 ```cpp
 #include <Serialization/PrefabResource.hpp>
 
-void moveTile(Ursa::LinkedSceneResource &level, const std::filesystem::path &scenePath,
+void moveTile(Ursa::LinkedSceneResource &level, Ursa::VirtualFileSystem &filesystem, const Ursa::VirtualPath &scenePath,
               Ursa::ComponentRegistry &registry, Ursa::ComponentLoadContext &context,
               Ursa::ResourceId instanceId, Ursa::ResourceId tileGameObjectId) {
     if (!Ursa::SetPrefabPropertyOverride(level, instanceId, tileGameObjectId,
                                           "/localTransform/position/0", 3.0f) ||
-        !Ursa::SaveLinkedSceneResource(scenePath, level, registry))
+        !Ursa::SaveLinkedSceneResource(filesystem, scenePath, level, registry))
         return;
-    if (!Ursa::ReloadLinkedSceneResource(scenePath, registry, context, level))
+    if (!Ursa::ReloadLinkedSceneResource(filesystem, scenePath, registry, context, level))
         return;
     if (!Ursa::ClearPrefabPropertyOverride(level, instanceId, tileGameObjectId,
                                             "/localTransform/position/0") ||
-        !Ursa::SaveLinkedSceneResource(scenePath, level, registry))
+        !Ursa::SaveLinkedSceneResource(filesystem, scenePath, level, registry))
         return;
-    Ursa::ReloadLinkedSceneResource(scenePath, registry, context, level);
+    Ursa::ReloadLinkedSceneResource(filesystem, scenePath, registry, context, level);
 }
 ```
 
 The context's `ResourceSession` must include both Engine and Demo resource roots. For changed material files, create a refreshed session and load a candidate before replacing the running scene. Structural overrides use `SetPrefabStructureOverride`; see the Engine README and `UrsaPrefabTests` for add, delete, reparent, owner, and order examples.
 
 The engine and Demo are separate Git repositories. Demo does not record an engine commit; configure it with a compatible UrsaEngine checkout. Follow the engine repository's `.clang-format` rules when editing C++ code.
+
+## Loose and packaged content
+
+From the workspace root:
+
+```powershell
+cmake --build Demo/build --config Debug --target UrsaDemoPackage
+Demo/build/Debug/UrsaSnake.exe --project Demo
+Demo/build/Debug/UrsaSnake.exe --pak Demo/build/package/Content.pak
+Demo/build/Debug/UrsaDemoEditor.exe --project Demo --scene Snake/Snake.ursascene
+Demo/build/Debug/UrsaDemoEditor.exe --project Demo --pak Demo/build/package/Content.pak --scene Snake/Snake.ursascene
+```
+
+The package contains both `ursa:` engine content and `prj:` project content, including
+generated shaders. `--pak` mounts it read only, while logs, settings and saves remain
+under `user:`. Package-backed Editor documents can be viewed and run; save fails with
+a read-only diagnostic. Loose Editor projects mount `prj:` writable.
+See Engine's `Docs/Resources.md` for the VFS API and provider boundaries.

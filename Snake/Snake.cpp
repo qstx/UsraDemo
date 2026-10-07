@@ -8,6 +8,10 @@
 #include <Serialization/PrefabResource.hpp>
 #include <Core/StringInterop.hpp>
 #include <filesystem>
+#include <Vfs/AssetRoots.hpp>
+#include <Vfs/RuntimeMountProfile.hpp>
+#include <Vfs/PakArchive.hpp>
+#include <Vfs/MemoryFileProvider.hpp>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -26,10 +30,11 @@ Ursa::Demo::SnakeConfig SmokeConfig()
 class SnakeApp final : public Ursa::Application
 {
 public:
-	SnakeApp(bool enableWindowStress, bool enableGameplaySmoke, bool enableSerializedReload)
-	    : game(enableGameplaySmoke ? SmokeConfig() : Ursa::Demo::SnakeConfig{}),
-	      assetsRoot(std::filesystem::current_path() / "Assets"), stressWindow(enableWindowStress),
-	      smokeGameplay(enableGameplaySmoke), serialized(enableSerializedReload)
+	SnakeApp(bool enableWindowStress, bool enableGameplaySmoke, bool enableSerializedReload,
+	         std::shared_ptr<Ursa::VirtualFileSystem> selectedFiles, Ursa::VirtualPath selectedScene)
+	    : game(enableGameplaySmoke ? SmokeConfig() : Ursa::Demo::SnakeConfig{}), files(std::move(selectedFiles)),
+	      initialScene(std::move(selectedScene)), stressWindow(enableWindowStress), smokeGameplay(enableGameplaySmoke),
+	      serialized(enableSerializedReload)
 	{
 	}
 
@@ -56,42 +61,39 @@ private:
 		{
 			return registered;
 		}
-		const auto resourceRoot = std::filesystem::temp_directory_path() /
-		                          ("UrsaSnakeScene-" + Ursa::ToStdString(Ursa::ResourceId::Generate().ToString()));
-		std::error_code filesystemError;
-		std::filesystem::create_directory(resourceRoot, filesystemError);
-		if (filesystemError)
+
+		Ursa::VirtualFileSystem scratch;
+		auto provider = std::make_shared<Ursa::MemoryFileProvider>();
+		auto mounted = scratch.MountProvider(Ursa::projectScheme, provider, Ursa::MountAccess::ReadWrite);
+		if (!mounted)
 		{
-			return Ursa::Result<void>::Failure("Cannot create Snake resource root: " +
-			                                   Ursa::ToUrsaString(filesystemError.message()));
+			return mounted;
 		}
-		const auto path = resourceRoot / "Snake.ursascene";
-		auto saved = Ursa::SaveSceneResource(path, Ursa::ResourceId::Generate(), *scene, registry);
+		auto path = Ursa::VirtualPath::Parse("prj:Snake.ursascene").value;
+		auto saved = Ursa::SaveSceneResource(scratch, path, Ursa::ResourceId::Generate(), *scene, registry);
 		if (!saved)
 		{
 			return saved;
 		}
-		auto session = Ursa::ResourceSession::Open({resourceRoot});
+		auto session = Ursa::ResourceSession::Open(scratch);
 		if (!session)
 		{
 			return Ursa::Result<void>::Failure(session.error);
 		}
 		Ursa::ComponentLoadContext context(*session.value);
 		context.Provide(game);
-		auto loaded = Ursa::LoadSceneResource(path, registry, context);
+		auto loaded = Ursa::LoadSceneResource(scratch, path, registry, context);
 		if (!loaded)
 		{
 			return Ursa::Result<void>::Failure(loaded.error);
 		}
 		auto candidate = std::move(loaded.value.scene);
-		auto reloaded = Ursa::ReloadSceneResource(path, registry, context, candidate);
+		auto reloaded = Ursa::ReloadSceneResource(scratch, path, registry, context, candidate);
 		if (!reloaded)
 		{
 			return reloaded;
 		}
 		scene = std::shared_ptr<Ursa::Scene>(std::move(candidate));
-		std::filesystem::remove(path, filesystemError);
-		std::filesystem::remove(resourceRoot, filesystemError);
 		return {};
 	}
 
@@ -107,22 +109,22 @@ private:
 		{
 			return registered;
 		}
-		auto session = Ursa::ResourceSession::Open(assetsRoot, Ursa::MountAccess::ReadOnly);
+		auto session = Ursa::ResourceSession::Open(*files);
 		if (!session)
 		{
 			return Ursa::Result<void>::Failure(session.error);
 		}
 		Ursa::ComponentLoadContext context(*session.value);
 		context.Provide(game);
-		const auto path = assetsRoot / "Snake" / "Snake.ursascene";
-		auto loaded = Ursa::LoadLinkedSceneResource(path, registry, context);
+		const auto path = initialScene;
+		auto loaded = Ursa::LoadLinkedSceneResource(*files, path, registry, context);
 		if (!loaded)
 		{
 			return Ursa::Result<void>::Failure(loaded.error);
 		}
 		if (serialized)
 		{
-			auto reloaded = Ursa::ReloadLinkedSceneResource(path, registry, context, loaded.value);
+			auto reloaded = Ursa::ReloadLinkedSceneResource(*files, path, registry, context, loaded.value);
 			if (!reloaded)
 			{
 				return reloaded;
@@ -133,7 +135,8 @@ private:
 	}
 
 	Ursa::Demo::SnakeGame game;
-	std::filesystem::path assetsRoot;
+	std::shared_ptr<Ursa::VirtualFileSystem> files;
+	Ursa::VirtualPath initialScene;
 	bool stressWindow = false;
 	bool smokeGameplay = false;
 	bool serialized = false;
@@ -151,6 +154,9 @@ int main(int argc, char** argv)
 		bool smokeGameplay = false;
 		bool serialized = false;
 		Ursa::UInt32 frameLimit = 0;
+		std::filesystem::path projectRoot = std::filesystem::current_path();
+		std::filesystem::path package;
+		Ursa::String sceneName = "Snake/Snake.ursascene";
 		for (int i = 1; i < argc; ++i)
 		{
 			const Ursa::String argument = argv[i];
@@ -170,6 +176,18 @@ int main(int argc, char** argv)
 			{
 				serialized = true;
 			}
+			else if (argument == "--project" && i + 1 < argc)
+			{
+				projectRoot = std::filesystem::u8path(argv[++i]);
+			}
+			else if (argument == "--pak" && i + 1 < argc)
+			{
+				package = std::filesystem::u8path(argv[++i]);
+			}
+			else if (argument == "--scene" && i + 1 < argc)
+			{
+				sceneName = argv[++i];
+			}
 			else if (argument == "--frames" && i + 1 < argc)
 			{
 				frameLimit = static_cast<Ursa::UInt32>(std::stoul(argv[++i]));
@@ -180,7 +198,50 @@ int main(int argc, char** argv)
 				                         "[--smoke-gameplay] [--serialized]");
 			}
 		}
-		SnakeApp app(stressWindow, smokeGameplay, serialized);
+
+		Ursa::RuntimeMountProfileConfig profile;
+		profile.applicationId = "UrsaSnake";
+		profile.mode = package.empty() ? Ursa::RuntimeMountMode::LooseRuntime : Ursa::RuntimeMountMode::PackagedRuntime;
+		if (package.empty())
+		{
+			auto roots = Ursa::ResolveEngineAssetRoots();
+			if (!roots)
+			{
+				throw std::runtime_error(Ursa::ToStdString(roots.error));
+			}
+			profile.engineDirectories = std::move(roots.value);
+			profile.projectAssetsDirectory = projectRoot / "Assets";
+		}
+		else
+		{
+			auto archive = Ursa::PakArchive::Open(package);
+			if (!archive)
+			{
+				throw std::runtime_error(Ursa::ToStdString(archive.error));
+			}
+			for (const Ursa::String scheme : {Ursa::String(Ursa::engineScheme), Ursa::String(Ursa::projectScheme)})
+			{
+				auto view = archive.value->View(scheme);
+				if (!view)
+				{
+					throw std::runtime_error(Ursa::ToStdString(view.error));
+				}
+				profile.packagedProviders.push_back({scheme, view.value});
+			}
+		}
+		auto mounted = Ursa::OpenRuntimeFileSystem(profile);
+		if (!mounted)
+		{
+			throw std::runtime_error(Ursa::ToStdString(mounted.error));
+		}
+		auto files = std::make_shared<Ursa::VirtualFileSystem>(std::move(mounted.value));
+		Ursa::ConfigureEngineFileSystem(files);
+		auto path = Ursa::VirtualPath::Parse("prj:" + sceneName);
+		if (!path)
+		{
+			throw std::runtime_error(Ursa::ToStdString(path.error));
+		}
+		SnakeApp app(stressWindow, smokeGameplay, serialized, files, path.value);
 		const auto result = app.Run(1280, 720, "Ursa Snake", visible, frameLimit);
 		if (!result)
 		{

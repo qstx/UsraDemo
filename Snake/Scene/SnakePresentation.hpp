@@ -10,6 +10,15 @@ namespace Ursa::Demo
 class SnakePresentation final : public Component
 {
 public:
+	String SerializationType() const override
+	{
+		return "demo.SnakePresentation";
+	}
+
+	Result<void> Serialize(ArchiveWriter& writer) const override;
+
+	Result<void> Deserialize(const ArchiveReader& reader, SerializationContext& context) override;
+
 	SnakePresentation(SnakeGame& snakeGame, GameObject::Ptr rootObject, bool enableGameplaySmoke);
 
 	Result<void> OnLateUpdate(const FrameContext& context) override;

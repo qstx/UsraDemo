@@ -1,3 +1,4 @@
+#include <ResourceFixtures.hpp>
 #include <Core/Containers.hpp>
 #include <Core/StringInterop.hpp>
 #include "SnakeScene.hpp"

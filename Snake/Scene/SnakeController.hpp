@@ -9,6 +9,15 @@ namespace Ursa::Demo
 class SnakeController final : public Component
 {
 public:
+	String SerializationType() const override
+	{
+		return "demo.SnakeController";
+	}
+
+	Result<void> Serialize(ArchiveWriter& writer) const override;
+
+	Result<void> Deserialize(const ArchiveReader& reader, SerializationContext& context) override;
+
 	SnakeController(SnakeGame& snakeGame, bool enableWindowStress, bool enableGameplaySmoke);
 
 	Result<void> OnUpdate(const FrameContext& context) override;

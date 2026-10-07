@@ -32,11 +32,6 @@ protected:
 		{
 			return Ursa::Result<void>::Failure(path.error);
 		}
-		auto target = Workspace()->WritablePath(path.value);
-		if (!target)
-		{
-			return Ursa::Result<void>::Failure(target.error);
-		}
 		auto opened = Ursa::Editor::OpenSceneDocument(path.value, Ursa::ResourceKind::Scene, Project().components,
 		                                              Documents()->Session(), Project().editContextSetup);
 		if (!opened)
@@ -58,6 +53,7 @@ int main(int argc, char** argv)
 	bool visible = true;
 	Ursa::UInt32 frames = 0;
 	std::filesystem::path projectRoot;
+	std::filesystem::path package;
 	std::filesystem::path initialScene;
 	for (int index = 1; index < argc; ++index)
 	{
@@ -69,6 +65,10 @@ int main(int argc, char** argv)
 		else if (argument == "--frames" && index + 1 < argc)
 		{
 			frames = static_cast<Ursa::UInt32>(std::strtoul(argv[++index], nullptr, 10));
+		}
+		else if (argument == "--pak" && index + 1 < argc)
+		{
+			package = std::filesystem::u8path(argv[++index]);
 		}
 		else if (argument == "--project" && index + 1 < argc)
 		{
@@ -127,7 +127,7 @@ int main(int argc, char** argv)
 		    return registered;
 	    },
 	    scenePath);
-	auto opened = editor.OpenProject(projectRoot);
+	auto opened = editor.OpenProject(projectRoot, package);
 	if (!opened)
 	{
 		URSA_LOG_CRITICAL("Editor", opened.error);

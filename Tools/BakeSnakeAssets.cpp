@@ -8,6 +8,7 @@
 #include <Serialization/PrefabResource.hpp>
 #include <cstdint>
 #include <filesystem>
+#include <Vfs/DirectoryFileProvider.hpp>
 #include <functional>
 #include <iostream>
 #include <string>
@@ -82,21 +83,30 @@ Ursa::Result<void> AssignStableIds(Ursa::Scene& scene)
 
 Ursa::Result<void> Bake(const std::filesystem::path& assetRoot, bool force)
 {
-	const auto directory = assetRoot / "Snake";
-	const auto prefabPath = directory / "Board.ursaprefab";
-	const auto scenePath = directory / "Snake.ursascene";
-	if (!force && (std::filesystem::exists(prefabPath) || std::filesystem::exists(scenePath)))
+
+	auto provider = Ursa::DirectoryFileProvider::Open(assetRoot, true);
+	if (!provider)
+	{
+		return Ursa::Result<void>::Failure(provider.error);
+	}
+	Ursa::VirtualFileSystem filesystem;
+	auto mounted = filesystem.MountProvider(Ursa::projectScheme, provider.value, Ursa::MountAccess::ReadWrite);
+	if (!mounted)
+	{
+		return mounted;
+	}
+	const auto prefabPath = Ursa::VirtualPath::Parse("prj:Snake/Board.ursaprefab").value;
+	const auto scenePath = Ursa::VirtualPath::Parse("prj:Snake/Snake.ursascene").value;
+	auto prefabExists = filesystem.Exists(prefabPath);
+	auto sceneExists = filesystem.Exists(scenePath);
+	if (!prefabExists || !sceneExists)
+	{
+		return Ursa::Result<void>::Failure(!prefabExists ? prefabExists.error : sceneExists.error);
+	}
+	if (!force && (prefabExists.value || sceneExists.value))
 	{
 		return Ursa::Result<void>::Failure("Snake assets already exist; pass --force to replace them");
 	}
-	std::error_code error;
-	std::filesystem::create_directories(directory, error);
-	if (error)
-	{
-		return Ursa::Result<void>::Failure("Cannot create Snake asset directory: " +
-		                                   Ursa::ToUrsaString(error.message()));
-	}
-
 	Ursa::Demo::SnakeGame game;
 	Ursa::Scene scene;
 	auto prepared = Ursa::Demo::SetupSnakeScene(scene, game);
@@ -139,7 +149,7 @@ Ursa::Result<void> Bake(const std::filesystem::path& assetRoot, bool force)
 	const auto prefabId = StableId(3, 1);
 	const auto sceneId = StableId(3, 2);
 	const auto instanceId = StableId(3, 3);
-	auto saved = Ursa::SavePrefabResource(prefabPath, prefabId, scene, board, registry);
+	auto saved = Ursa::SavePrefabResource(filesystem, prefabPath, prefabId, scene, board, registry);
 	if (!saved)
 	{
 		return saved;
@@ -149,7 +159,7 @@ Ursa::Result<void> Bake(const std::filesystem::path& assetRoot, bool force)
 	{
 		return removed;
 	}
-	auto encoded = Ursa::EncodeSceneDocument(scenePath, sceneId, scene, registry);
+	auto encoded = Ursa::EncodeSceneDocument("bake.ursascene", sceneId, scene, registry);
 	if (!encoded)
 	{
 		return Ursa::Result<void>::Failure(encoded.error);
@@ -159,7 +169,7 @@ Ursa::Result<void> Bake(const std::filesystem::path& assetRoot, bool force)
 	{
 		return linked;
 	}
-	return Ursa::WriteJsonResource(scenePath, encoded.value);
+	return Ursa::WriteJsonResource(filesystem, scenePath, encoded.value);
 }
 } // namespace
 

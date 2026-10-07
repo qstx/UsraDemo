@@ -12,6 +12,7 @@ endif()
 
 enable_testing()
 add_subdirectory("${URSA_ENGINE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/Engine")
+include_directories("${URSA_ENGINE_DIR}/Tests/Fixtures")
 
 if(WIN32)
   add_custom_target(UrsaDemoFormatCheck
@@ -49,6 +50,22 @@ target_include_directories(UrsaSnakeScene PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Sna
 add_executable(UrsaSnakeAssetBake Tools/BakeSnakeAssets.cpp)
 target_link_libraries(UrsaSnakeAssetBake PRIVATE UrsaSnakeScene)
 
+add_custom_target(UrsaDemoPackage
+  COMMAND UrsaPak --engine "${URSA_ENGINE_DIR}/Assets"
+    --engine-generated "${URSA_ASSET_MIRROR_DIR}" --project "${CMAKE_CURRENT_SOURCE_DIR}/Assets"
+    --output "${CMAKE_CURRENT_BINARY_DIR}/package/Content.pak"
+  DEPENDS UrsaPak UrsaEngine VERBATIM)
+if(TARGET UrsaEditorCore)
+  add_dependencies(UrsaDemoPackage UrsaEditorCore)
+endif()
+add_test(NAME UrsaDemoPackageTests COMMAND UrsaPak
+  --engine "${URSA_ENGINE_DIR}/Assets" --engine-generated "${URSA_ASSET_MIRROR_DIR}"
+  --project "${CMAKE_CURRENT_SOURCE_DIR}/Assets" --output "${CMAKE_CURRENT_BINARY_DIR}/package/Content.pak")
+set_tests_properties(UrsaDemoPackageTests PROPERTIES FIXTURES_SETUP UrsaDemoContentPak)
+add_test(NAME UrsaSnakePakWindowSmoke COMMAND UrsaSnake
+  --pak "${CMAKE_CURRENT_BINARY_DIR}/package/Content.pak" --hidden --frames 8)
+set_tests_properties(UrsaSnakePakWindowSmoke PROPERTIES FIXTURES_REQUIRED UrsaDemoContentPak)
+
 file(GLOB URSA_SNAKE_APP_SOURCES CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/Snake/*.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/Snake/*.hpp")
@@ -70,6 +87,10 @@ if(TARGET Ursa::Editor)
     VS_DEBUGGER_COMMAND_ARGUMENTS "--project \"${CMAKE_CURRENT_SOURCE_DIR}\" --scene Snake/Snake.ursascene"
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
   add_test(NAME UrsaDemoEditorWindowSmoke COMMAND UrsaDemoEditor --project "${CMAKE_CURRENT_SOURCE_DIR}" --scene Snake/Snake.ursascene --hidden --frames 3)
+  add_test(NAME UrsaDemoEditorPakWindowSmoke COMMAND UrsaDemoEditor
+    --project "${CMAKE_CURRENT_SOURCE_DIR}" --pak "${CMAKE_CURRENT_BINARY_DIR}/package/Content.pak"
+    --scene Snake/Snake.ursascene --hidden --frames 8)
+  set_tests_properties(UrsaDemoEditorPakWindowSmoke PROPERTIES FIXTURES_REQUIRED UrsaDemoContentPak)
 
   add_executable(UrsaSnakeEditorTests Tests/Snake/Scene/SnakeEditorTests.cpp Editor/SnakeEditors.cpp)
   target_link_libraries(UrsaSnakeEditorTests PRIVATE Ursa::Editor UrsaSnakeScene)

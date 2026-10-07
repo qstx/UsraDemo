@@ -2,23 +2,7 @@
   "format": "UrsaPrefab",
   "gameObjects": [
     {
-      "components": [
-        {
-          "data": {
-            "color": [
-              1.0,
-              0.2823529541492462,
-              1.0,
-              1.0
-            ],
-            "material": null
-          },
-          "enabled": true,
-          "id": "d86799e6-2749-48c0-89f1-940b14185566",
-          "type": "ursa.BoxRender",
-          "version": 1
-        }
-      ],
+      "components": [],
       "enabled": true,
       "id": "75727361-0000-0000-0100-000000000002",
       "localTransform": {
