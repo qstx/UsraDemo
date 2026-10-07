@@ -2,8 +2,10 @@
 #include <SnakeController.hpp>
 #include <SnakeGame.hpp>
 #include <SnakeSerialization.hpp>
+#include <Core/StringInterop.hpp>
 #include <Serialization/JsonResource.hpp>
 #include <Serialization/PrefabResource.hpp>
+#include <Serialization/AssetReference.hpp>
 #include <iostream>
 
 int main(int argc, char** argv)
@@ -14,9 +16,17 @@ int main(int argc, char** argv)
 	const auto prefabPath = root / "Snake" / "Board.ursaprefab";
 	auto sceneDocument = Ursa::ReadJsonResource(scenePath, Ursa::ResourceKind::Scene);
 	auto prefabDocument = Ursa::ReadJsonResource(prefabPath, Ursa::ResourceKind::Prefab);
+	auto scenePrefabReference =
+	    sceneDocument && sceneDocument.value.contains("instances") && !sceneDocument.value["instances"].empty()
+	        ? Ursa::AssetReferenceFromJson(sceneDocument.value["instances"][0]["prefab"],
+	                                       "Snake scene prefab reference")
+	        : Ursa::Result<Ursa::AssetReference>::Failure("Missing Snake prefab reference");
+	auto prefabId = prefabDocument && prefabDocument.value.contains("id") && prefabDocument.value["id"].is_string()
+	                    ? Ursa::ResourceId::Parse(Ursa::ToUrsaString(prefabDocument.value["id"].get<std::string>()))
+	                    : Ursa::Result<Ursa::ResourceId>::Failure("Missing Board Prefab ID");
 	if (!sceneDocument || !prefabDocument || !sceneDocument.value.contains("instances") ||
-	    sceneDocument.value["instances"].size() != 1 ||
-	    sceneDocument.value["instances"][0]["prefab"] != prefabDocument.value["id"])
+	    sceneDocument.value["instances"].size() != 1 || !scenePrefabReference || !prefabId ||
+	    scenePrefabReference.value.guid != prefabId.value || scenePrefabReference.value.localFileId != 0)
 	{
 		std::cerr << "Snake scene does not reference the board Prefab\n";
 		return 1;

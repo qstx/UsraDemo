@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(UrsaDemo VERSION 0.1.0 LANGUAGES CXX)
 
 if(MSVC)
-  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/EHsc> $<$<COMPILE_LANGUAGE:CXX>:/utf-8>)
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/EHsc>)
 endif()
 
 set(URSA_ENGINE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../Engine" CACHE PATH "Path to the UrsaEngine repository")
@@ -12,6 +12,9 @@ endif()
 
 enable_testing()
 add_subdirectory("${URSA_ENGINE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/Engine")
+if(MSVC)
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/utf-8>)
+endif()
 include_directories("${URSA_ENGINE_DIR}/Tests/Fixtures")
 
 if(WIN32)
@@ -53,6 +56,7 @@ target_link_libraries(UrsaSnakeAssetBake PRIVATE UrsaSnakeScene)
 add_custom_target(UrsaDemoPackage
   COMMAND UrsaPak --engine "${URSA_ENGINE_DIR}/Assets"
     --engine-generated "${URSA_ASSET_MIRROR_DIR}" --project "${CMAKE_CURRENT_SOURCE_DIR}/Assets"
+    --library "${CMAKE_CURRENT_SOURCE_DIR}/Library"
     --output "${CMAKE_CURRENT_BINARY_DIR}/package/Content.pak"
   DEPENDS UrsaPak UrsaEngine UrsaEngineShaderAssets VERBATIM)
 if(TARGET UrsaEditorCore)
@@ -60,7 +64,8 @@ if(TARGET UrsaEditorCore)
 endif()
 add_test(NAME UrsaDemoPackageTests COMMAND UrsaPak
   --engine "${URSA_ENGINE_DIR}/Assets" --engine-generated "${URSA_ASSET_MIRROR_DIR}"
-  --project "${CMAKE_CURRENT_SOURCE_DIR}/Assets" --output "${CMAKE_CURRENT_BINARY_DIR}/package/Content.pak")
+  --project "${CMAKE_CURRENT_SOURCE_DIR}/Assets" --library "${CMAKE_CURRENT_SOURCE_DIR}/Library"
+  --output "${CMAKE_CURRENT_BINARY_DIR}/package/Content.pak")
 set_tests_properties(UrsaDemoPackageTests PROPERTIES FIXTURES_SETUP UrsaDemoContentPak)
 add_test(NAME UrsaSnakePakWindowSmoke COMMAND UrsaSnake
   --pak "${CMAKE_CURRENT_BINARY_DIR}/package/Content.pak" --hidden --frames 8)
@@ -98,6 +103,25 @@ if(TARGET Ursa::Editor)
   target_link_libraries(UrsaSnakeEditorTests PRIVATE Ursa::Editor UrsaSnakeScene)
   target_include_directories(UrsaSnakeEditorTests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Editor")
   add_test(NAME UrsaSnakeEditorTests COMMAND UrsaSnakeEditorTests)
+
+  add_executable(UrsaDemoTextureImportTests Tests/Assets/TextureImportTests.cpp)
+  target_link_libraries(UrsaDemoTextureImportTests PRIVATE Ursa::Editor)
+  target_compile_definitions(UrsaDemoTextureImportTests PRIVATE
+    URSA_DEMO_TEXTURE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/Assets/Textures/UrsaEngine.png")
+  add_test(NAME UrsaDemoTextureImportTests COMMAND UrsaDemoTextureImportTests)
+
+  add_executable(UrsaDemoModelImportTests Tests/Assets/ModelImportTests.cpp)
+  target_link_libraries(UrsaDemoModelImportTests PRIVATE Ursa::Editor)
+  target_compile_definitions(UrsaDemoModelImportTests PRIVATE
+    URSA_DEMO_MODEL_PATH="${CMAKE_CURRENT_SOURCE_DIR}/Assets/Models/Cube.fbx"
+    URSA_DEMO_TEXTURE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/Assets/Textures/UrsaEngine.png"
+    URSA_ASSIMP_EMBEDDED_FBX_PATH="${URSA_ENGINE_DIR}/third_party/assimp/test/models/FBX/embedded_ascii/box_embedded_texture_fragmented.fbx"
+    URSA_ASSIMP_ANIMATED_FBX_PATH="${URSA_ENGINE_DIR}/third_party/assimp/test/models/FBX/animation_with_skeleton.fbx"
+    URSA_PAK_EXECUTABLE="$<TARGET_FILE:UrsaPak>"
+    URSA_DEMO_ENGINE_ASSET_PATH="${URSA_ENGINE_DIR}/Assets"
+    URSA_DEMO_ENGINE_GENERATED_ASSET_PATH="${URSA_ASSET_MIRROR_DIR}")
+  add_dependencies(UrsaDemoModelImportTests UrsaPak UrsaEngineShaderAssets)
+  add_test(NAME UrsaDemoModelImportTests COMMAND UrsaDemoModelImportTests)
 endif()
 
 file(GLOB URSA_MATERIAL_SHOWCASE_SOURCES CONFIGURE_DEPENDS
@@ -135,6 +159,8 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES
   Tests/Snake/Game/SnakeTests.cpp
   Tests/Snake/Scene/SnakeSceneTests.cpp
   Tests/Snake/Scene/SnakeAssetTests.cpp
+  Tests/Assets/TextureImportTests.cpp
+  Tests/Assets/ModelImportTests.cpp
   Tests/Snake/Scene/SnakeSerializationTests.cpp
   Tests/Snake/Scene/SnakeRenderTests.cpp)
 

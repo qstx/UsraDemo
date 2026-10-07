@@ -131,6 +131,7 @@ void Test(const std::filesystem::path& root)
 	Take(source.AddComponent<CleanupComponent>(source.RootGameObjects()[0], game, cleanup));
 	const auto path = root / "Snake.ursascene";
 	done(Ursa::SaveSceneResource(path, Ursa::ResourceId::Generate(), source, registry));
+	done(Ursa::WriteResourceMetadataTree(root));
 	auto session = Take(Ursa::ResourceSession::Open({root}));
 	LoadSnake(path, *session, game);
 	Ursa::ComponentLoadContext context(*session);
@@ -167,7 +168,7 @@ int main()
 		                  ("UrsaSnakeSerializationTests-" + Ursa::ToStdString(Ursa::ResourceId::Generate().ToString()));
 		std::filesystem::create_directory(root);
 		Test(root);
-		std::filesystem::remove(root);
+		std::filesystem::remove_all(root);
 		return 0;
 	}
 	catch (const std::exception& error)

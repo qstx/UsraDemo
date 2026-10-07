@@ -134,5 +134,8 @@ Demo/build/Debug/UrsaDemoEditor.exe --project Demo --pak Demo/build/package/Cont
 The package contains both `ursa:` engine content and `prj:` project content, including
 generated shaders. `--pak` mounts it read only, while logs, settings and saves remain
 under `user:`. Package-backed Editor documents can be viewed and run; save fails with
-a read-only diagnostic. Loose Editor projects mount `prj:` writable.
+a read-only diagnostic. `UrsaDemoPackage` also cooks current `Library/` imports and
+adds a runtime GUID/local-file-ID catalog; it excludes `.meta`, `Library/`, and raw
+FBX/OBJ/image sources. Reimport changed assets in the Editor before packaging.
+Loose Editor projects mount `prj:` writable.
 See Engine's `Docs/Resources.md` for the VFS API and provider boundaries.
