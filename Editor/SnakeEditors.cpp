@@ -1,80 +1,152 @@
 #include "SnakeEditors.hpp"
+
 #include <SnakeController.hpp>
 #include <SnakePresentation.hpp>
-#include <imgui.h>
 #include <functional>
 
 namespace Ursa::Demo
 {
+namespace
+{
+Result<Ursa::Demo::SnakeGame*> SnakeGameService(Editor::ComponentInspectorContext& context)
+{
+	return context.loadContext ? context.loadContext->Service<Ursa::Demo::SnakeGame>()
+	                           : Result<Ursa::Demo::SnakeGame*>::Failure("SnakeGame service is unavailable");
+}
+} // namespace
+
 Result<void> RegisterSnakeEditors(Editor::ComponentEditors& editors)
 {
-	auto controller = editors.RegisterEditor("demo.SnakeController",
-	                                         [](Component& component, Scene&, GameObject::Ptr)
-	                                         {
-		                                         auto& value = static_cast<SnakeController&>(component);
-		                                         bool stress = value.StressWindow();
-		                                         bool smoke = value.SmokeGameplay();
-		                                         const bool editedStress = ImGui::Checkbox("Stress window", &stress);
-		                                         const bool editedSmoke = ImGui::Checkbox("Smoke gameplay", &smoke);
-		                                         if (editedStress)
-		                                         {
-			                                         value.SetStressWindow(stress);
-		                                         }
-		                                         if (editedSmoke)
-		                                         {
-			                                         value.SetSmokeGameplay(smoke);
-		                                         }
-		                                         return Result<bool>::Success(editedStress || editedSmoke);
-	                                         });
+	Editor::ComponentEditor drawController = [](Component& component, Editor::ComponentInspectorContext&,
+	                                            Editor::InspectorUI& ui) -> Result<bool>
+	{
+		auto& controller = static_cast<SnakeController&>(component);
+		bool stress = controller.StressWindow();
+		bool smoke = controller.SmokeGameplay();
+		auto editedStress = ui.Checkbox("Stress window", stress);
+		auto editedSmoke = ui.Checkbox("Smoke gameplay", smoke);
+		if (!editedStress || !editedSmoke)
+		{
+			return Result<bool>::Failure(!editedStress ? editedStress.error : editedSmoke.error);
+		}
+		if (editedStress.value)
+		{
+			controller.SetStressWindow(stress);
+		}
+		if (editedSmoke.value)
+		{
+			controller.SetSmokeGameplay(smoke);
+		}
+		return Result<bool>::Success(editedStress.value || editedSmoke.value);
+	};
+	auto controller = editors.RegisterType(
+	    {"demo.SnakeController", "Snake Controller", "Gameplay",
+	     [](Editor::ComponentInspectorContext& context) -> Result<Component*>
+	     {
+		     auto game = SnakeGameService(context);
+		     if (!game)
+		     {
+			     return Result<Component*>::Failure(game.error);
+		     }
+		     auto added = context.object->AddComponent<SnakeController>(*game.value, false, false);
+		     return added ? Result<Component*>::Success(added.value) : Result<Component*>::Failure(added.error);
+	     },
+	     [](const Editor::ComponentInspectorContext& context)
+	     {
+		     return context.loadContext && context.loadContext->Service<SnakeGame>()
+		                ? Result<void>{}
+		                : Result<void>::Failure("Snake Controller requires a SnakeGame service");
+	     }},
+	    drawController);
 	if (!controller)
 	{
 		return controller;
 	}
-	return editors.RegisterEditor(
-	    "demo.SnakePresentation",
-	    [](Component& component, Scene& scene, GameObject::Ptr)
-	    {
-		    auto& value = static_cast<SnakePresentation&>(component);
-		    bool changed = false;
-		    bool smoke = value.SmokeGameplay();
-		    if (ImGui::Checkbox("Smoke gameplay", &smoke))
-		    {
-			    value.SetSmokeGameplay(smoke);
-			    changed = true;
-		    }
-		    const auto currentLabel = scene.GameObjectName(value.RootNode());
-		    if (ImGui::BeginCombo("Root node", currentLabel ? currentLabel.value.c_str() : "Select node"))
-		    {
-			    std::function<void(GameObject::Ptr)> offer = [&](GameObject::Ptr candidate)
-			    {
-				    const auto label = scene.GameObjectName(candidate);
-				    const auto id = scene.PersistentId(candidate);
-				    if (label && id)
-				    {
-					    ImGui::PushID(id.value.ToString().c_str());
-					    if (ImGui::Selectable(label.value.c_str(), value.RootNode() == candidate))
-					    {
-						    value.SetRootNode(candidate);
-						    changed = true;
-					    }
-					    ImGui::PopID();
-				    }
-				    const auto children = scene.ChildrenOf(candidate);
-				    if (children)
-				    {
-					    for (GameObject::Ptr child : children.value)
-					    {
-						    offer(child);
-					    }
-				    }
-			    };
-			    for (GameObject::Ptr root : scene.RootGameObjects())
-			    {
-				    offer(root);
-			    }
-			    ImGui::EndCombo();
-		    }
-		    return Result<bool>::Success(changed);
-	    });
+
+	Editor::ComponentEditor drawPresentation = [](Component& component, Editor::ComponentInspectorContext& context,
+	                                              Editor::InspectorUI& ui) -> Result<bool>
+	{
+		auto& presentation = static_cast<SnakePresentation&>(component);
+		bool changed = false;
+		bool smoke = presentation.SmokeGameplay();
+		auto editedSmoke = ui.Checkbox("Smoke gameplay", smoke);
+		if (!editedSmoke)
+		{
+			return Result<bool>::Failure(editedSmoke.error);
+		}
+		if (editedSmoke.value)
+		{
+			presentation.SetSmokeGameplay(smoke);
+			changed = true;
+		}
+		Vector<Editor::InspectorOption> options{{{}, "None"}};
+		std::function<void(GameObject::Ptr)> collect = [&](GameObject::Ptr candidate)
+		{
+			auto name = candidate->Name();
+			if (name)
+			{
+				options.push_back({candidate->Id(), name.value});
+			}
+			for (GameObject::Ptr child : candidate->Children())
+			{
+				collect(child);
+			}
+		};
+		for (GameObject::Ptr root : context.roots)
+		{
+			collect(root);
+		}
+		ResourceId rootId = presentation.RootNode() ? presentation.RootNode()->Id() : ResourceId{};
+		auto selectedRoot = ui.Select("Root node", options, rootId);
+		if (!selectedRoot)
+		{
+			return Result<bool>::Failure(selectedRoot.error);
+		}
+		if (selectedRoot.value)
+		{
+			GameObject::Ptr target;
+			std::function<void(GameObject::Ptr)> find = [&](GameObject::Ptr candidate)
+			{
+				if (candidate->Id() == rootId)
+				{
+					target = candidate;
+				}
+				for (GameObject::Ptr child : candidate->Children())
+				{
+					find(child);
+				}
+			};
+			for (GameObject::Ptr root : context.roots)
+			{
+				find(root);
+			}
+			if (!target)
+			{
+				return Result<bool>::Failure("Selected Snake root GameObject is unavailable");
+			}
+			presentation.SetRootNode(target);
+			changed = true;
+		}
+		return Result<bool>::Success(changed);
+	};
+	return editors.RegisterType(
+	    {"demo.SnakePresentation", "Snake Presentation", "Gameplay",
+	     [](Editor::ComponentInspectorContext& context) -> Result<Component*>
+	     {
+		     auto game = SnakeGameService(context);
+		     if (!game)
+		     {
+			     return Result<Component*>::Failure(game.error);
+		     }
+		     auto added = context.object->AddComponent<SnakePresentation>(*game.value, context.object, false);
+		     return added ? Result<Component*>::Success(added.value) : Result<Component*>::Failure(added.error);
+	     },
+	     [](const Editor::ComponentInspectorContext& context)
+	     {
+		     return context.loadContext && context.loadContext->Service<SnakeGame>()
+		                ? Result<void>{}
+		                : Result<void>::Failure("Snake Presentation requires a SnakeGame service");
+	     }},
+	    drawPresentation);
 }
 } // namespace Ursa::Demo

@@ -51,6 +51,15 @@ int main()
 		done(Demo::RegisterSnakeComponents(codecs));
 		Editor::ComponentEditors inspectors;
 		done(Demo::RegisterSnakeEditors(inspectors));
+		const auto* snakeType = inspectors.FindType("demo.SnakeController");
+		Expect(snakeType && snakeType->displayName == "Snake Controller" && snakeType->category == "Gameplay",
+		       "Snake components did not register in the Inspector catalog");
+		auto unconfiguredTarget = GameObject::Create("Without services");
+		Editor::ComponentInspectorContext unconfigured;
+		unconfigured.object = unconfiguredTarget;
+		Expect(!inspectors.CanCreate("demo.SnakeController", unconfigured) &&
+		           !inspectors.Create("demo.SnakeController", unconfigured) && unconfiguredTarget->Components().empty(),
+		       "A Snake component was offered without its runtime service");
 		Expect(inspectors.Find("demo.SnakeController") && inspectors.Find("demo.SnakePresentation"),
 		       "Snake property editors were not registered");
 		Expect(!inspectors.Find("other.Component") && !inspectors.RegisterEditor("demo.SnakeController", {}),
@@ -58,6 +67,16 @@ int main()
 		auto workspace = Take(Editor::ProjectWorkspace::Open(root));
 		auto documents = Take(Editor::EditorDocuments::Create(*workspace));
 		Demo::SnakeGame editGame;
+		ComponentLoadContext addContext(documents->Session());
+		addContext.Provide(editGame);
+		Editor::ComponentInspectorContext addTarget;
+		addTarget.object = GameObject::Create("Add target");
+		addTarget.roots = {addTarget.object};
+		addTarget.loadContext = &addContext;
+		auto addedByFactory = Take(inspectors.Create("demo.SnakeController", addTarget));
+		Expect(addedByFactory->GetGameObject() == addTarget.object &&
+		           addedByFactory->SerializationType() == "demo.SnakeController",
+		       "Snake factory did not attach its persistent component");
 		const Editor::EditContextSetup setup = [&editGame](ComponentLoadContext& context)
 		{
 			context.Provide(editGame);
