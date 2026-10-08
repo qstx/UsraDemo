@@ -1,5 +1,7 @@
-# Demo assets
+# Demo 资源
 
-This directory is the writable project asset root for UrsaDemo, mounted as `prj:`. Editor-created `.ursatex`, `.ursamat`, `.ursascene`, and `.ursaprefab` files belong here. The Engine's built-in assets remain in the sibling Engine repository and are mounted read-only as `ursa:`; compiled shaders are generated into `../cache/Assets`, the mirror that `ursa:` overlays on the engine sources.
+此目录是 Demo 项目的可写资源根，挂载为 `prj:`。Editor 创建的 Scene、Prefab、材质、纹理和导入资源都保存在这里。Engine 内置资源从相邻的 Engine 仓库以只读 `ursa:` 挂载访问。
 
-`Snake/Snake.ursascene` is the playable Snake scene. It references `Snake/Board.ursaprefab`, which owns the board base and 16-by-16 tile grid. The scene owns the game camera and Snake controller/presentation components. The presentation component creates the moving body and food from game state at runtime. Edit and save these resources with `UrsaDemoEditor`; board Prefab edits take effect the next time the scene is loaded.
+`Snake/Snake.ursascene` 引用 `Snake/Board.ursaprefab`。Prefab 上的 `SnakeBoardBehaviour` 用 C# 创建棋盘底座和格子；Scene 上的 `SnakeController` 负责规则、输入、蛇身和食物。使用通用 `UrsaEditor --project Demo --scene Snake/Snake.ursascene` 编辑，或用 `UrsaScriptPlayer` 独立运行。
+
+`MaterialShowcase.ursascene` 演示 Unlit 与 PBR 材质。项目运行脚本和 Editor 扩展位于 `Scripts/`；编译项目、导入缓存和生成文件放在 `Library/`，不要放进此资源目录。
