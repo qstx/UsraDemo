@@ -1,7 +1,6 @@
 /build/
 /build-*/
 /out/
-/cache/
 /Library/
 /.vs/
 *.user

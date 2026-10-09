@@ -13,14 +13,16 @@ Demo 是 UrsaEngine 的 C# 游戏项目，运行脚本、编辑器扩展和资�
 
 项目源码不需要 CMakeLists.txt，也不需要项目自有 C++ launcher、组件注册回调或资产烘焙程序。脚本生成的项目、程序集和导入缓存保存在 `Library/`，不放入 `Assets/`。
 
+引擎内置资源由构建自动准备，位于 `Engine/Build/Resources/<配置>/`；引擎 Shader 编译缓存位于 `Engine/Build/Intermediate/ShaderCompileCache/`。项目缓存继续归属 Demo/Library。清理生成文件后的恢复方法见 [构建资源与项目缓存](../Engine/Docs/BuildResources.md)。
+
 ## 构建与测试
 
 从工作区根目录运行：
 
 ```powershell
-cmake -S Engine -B Engine/build -DURSA_ENABLE_DOTNET=ON -DURSA_PROJECT_DIR=Demo
-cmake --build Engine/build --config Debug --target UrsaEditor UrsaScriptPlayer UrsaScriptCompile UrsaPak
-ctest --test-dir Engine/build -C Debug --output-on-failure -R 'Ursa(Project|Snake)'
+cmake -S Engine -B Engine/Build -DURSA_ENABLE_DOTNET=ON -DURSA_PROJECT_DIR=Demo
+cmake --build Engine/Build --config Debug --target UrsaEditor UrsaScriptPlayer UrsaScriptCompile UrsaPak
+ctest --test-dir Engine/Build -C Debug --output-on-failure -R 'Ursa(Project|Snake)'
 ```
 
 需要 Visual Studio 2022、CMake、Vulkan SDK、`.NET 10` SDK/runtime，以及已初始化的 Engine 子模块。Release 构建将 `Debug` 换成 `Release`。
@@ -30,14 +32,14 @@ ctest --test-dir Engine/build -C Debug --output-on-failure -R 'Ursa(Project|Snak
 通用 Editor 打开 Snake Scene：
 
 ```powershell
-Engine/build/editor/Debug/UrsaEditor.exe --project Demo --scene Snake/Snake.ursascene
+Engine/Build/Editor/Debug/UrsaEditor.exe --project Demo --scene Snake/Snake.ursascene
 ```
 
 独立运行 Snake 或材质展示：
 
 ```powershell
-Engine/build/Debug/UrsaScriptPlayer.exe --project Demo --scene Snake/Snake.ursascene
-Engine/build/Debug/UrsaScriptPlayer.exe --project Demo --scene MaterialShowcase.ursascene
+Engine/Build/Debug/UrsaScriptPlayer.exe --project Demo --scene Snake/Snake.ursascene
+Engine/Build/Debug/UrsaScriptPlayer.exe --project Demo --scene MaterialShowcase.ursascene
 ```
 
 Snake 使用方向键或 WASD 转向，`P` 暂停/继续，空格重新开始。Script Player 也支持 `--pak <Content.pak>`；Engine 的 `UrsaPak` 会把项目 C# 程序集、资源和 Engine 内容打包到同一个内容包中。
