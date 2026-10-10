@@ -13,7 +13,7 @@ Demo 是 UrsaEngine 的 C# 游戏项目，运行脚本、编辑器扩展和资�
 
 项目源码不需要 CMakeLists.txt，也不需要项目自有 C++ launcher、组件注册回调或资产烘焙程序。脚本生成的项目、程序集和导入缓存保存在 `Library/`，不放入 `Assets/`。
 
-引擎内置资源由构建自动准备，位于 `Engine/Build/Resources/<配置>/`；引擎 Shader 编译缓存位于 `Engine/Build/Intermediate/ShaderCompileCache/`。项目缓存继续归属 Demo/Library。清理生成文件后的恢复方法见 [构建资源与项目缓存](../Engine/Docs/BuildResources.md)。
+内置与项目资源统一由 Editor 或无界面导入工具准备，产物及 Shader 缓存均归属 Demo/Library。普通程序构建不准备资源。流程与恢复说明见 [项目资源导入管线](../Engine/Docs/AssetImportPipeline.md)。
 
 ## 构建与测试
 
@@ -21,7 +21,7 @@ Demo 是 UrsaEngine 的 C# 游戏项目，运行脚本、编辑器扩展和资�
 
 ```powershell
 cmake -S Engine -B Engine/Build -DURSA_ENABLE_DOTNET=ON -DURSA_PROJECT_DIR=Demo
-cmake --build Engine/Build --parallel --config Debug --target UrsaEditor UrsaScriptPlayer UrsaScriptCompile UrsaPak
+cmake --build Engine/Build --parallel --config Debug --target UrsaEditor UrsaScriptPlayer UrsaAssetImport UrsaPak
 ctest --test-dir Engine/Build -C Debug --output-on-failure -R 'Ursa(Project|Snake)'
 ```
 
@@ -45,3 +45,5 @@ Engine/Build/Debug/UrsaScriptPlayer.exe --project Demo --scene MaterialShowcase.
 Snake 使用方向键或 WASD 转向，`P` 暂停/继续，空格重新开始。Script Player 也支持 `--pak <Content.pak>`；Engine 的 `UrsaPak` 会把项目 C# 程序集、资源和 Engine 内容打包到同一个内容包中。
 
 所有项目路径都通过 `--project` 指定。运行 Editor 时，先在 Project 面板打开 Scene，点击 Run/Stop 可在临时运行场景与编辑场景之间切换。
+
+启动 Player 前执行 `Engine/Build/Editor/Debug/UrsaAssetImport.exe --project Demo --configuration Debug`；Editor 的 `--project Demo` 会自动准备资源。内容构建使用 `UrsaPak --project-root Demo --configuration Debug --output Demo/Build/Content.pak`。
