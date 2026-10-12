@@ -12,6 +12,7 @@ public sealed class SnakeController : Behaviour
 	public bool smokeGameplay;
 
 	private readonly List<GameObject> segments = new();
+	private readonly Dictionary<GameObject, Material> ownedMaterials = new();
 	private SnakeGame? game;
 	private SnakeFixedStepClock clock = new();
 	private GameObject? foodObject;
@@ -96,13 +97,13 @@ public sealed class SnakeController : Behaviour
 		}
 		while (segments.Count > game.Body.Count)
 		{
-			segments[^1].Destroy();
+			ReleaseBox(segments[^1]);
 			segments.RemoveAt(segments.Count - 1);
 		}
 		while (segments.Count < game.Body.Count)
 		{
 			segments.Add(CreateBox("Snake Segment", GameObject, default, new Vector3(0.84f, 0.84f, 0.84f),
-				new Color(0.12f, 0.65f, 0.42f)));
+				segments.Count == 0 ? new Color(0.35f, 0.95f, 0.5f) : new Color(0.12f, 0.65f, 0.42f)));
 		}
 		float xOffset = (game.Width - 1) * 0.5f;
 		float zOffset = (game.Height - 1) * 0.5f;
@@ -111,13 +112,11 @@ public sealed class SnakeController : Behaviour
 			SnakeCell cell = game.Body[index];
 			GameObject segment = segments[index];
 			segment.Transform.LocalPosition = new Vector3(cell.X - xOffset, 0.34f, cell.Z - zOffset);
-			segment.GetComponent<BoxRenderComponent>()!.Color = index == 0
-				? new Color(0.35f, 0.95f, 0.5f)
-				: new Color(0.12f, 0.65f, 0.42f);
+
 		}
 		if (!game.Food.HasValue)
 		{
-			foodObject?.Destroy();
+			if (foodObject != null) ReleaseBox(foodObject);
 			foodObject = null;
 			return;
 		}
@@ -132,12 +131,27 @@ public sealed class SnakeController : Behaviour
 
 	private GameObject CreateBox(string name, GameObject parent, Vector3 position, Vector3 scale, Color color)
 	{
-		GameObject item = GameObject.Create(name);
+		GameObject item = GameObject.CreatePrimitive();
+		item.Name = name;
 		item.Parent = parent;
 		item.Transform.LocalPosition = position;
 		item.Transform.LocalScale = scale;
-		item.AddComponent<BoxRenderComponent>().Color = color;
+		var material = item.GetComponent<MeshRendererComponent>()!.Material!;
+		material.Color = color.ToLinear();
+		ownedMaterials.Add(item, material);
 		return item;
+	}
+
+	private void ReleaseBox(GameObject item)
+	{
+		item.Destroy();
+		if (ownedMaterials.Remove(item, out var material) && material.IsValid) material.Destroy();
+	}
+
+	public override void OnDestroy()
+	{
+		foreach (var material in ownedMaterials.Values) if (material.IsValid) material.Destroy();
+		ownedMaterials.Clear();
 	}
 
 	private void UpdateTitle()
@@ -201,6 +215,7 @@ public sealed class SnakeController : Behaviour
 [UrsaScriptType("demo.snake-board", Version = 1)]
 public sealed class SnakeBoardBehaviour : Behaviour
 {
+	private readonly List<Material> ownedMaterials = new();
 	public int width = 16;
 	public int height = 16;
 
@@ -223,10 +238,19 @@ public sealed class SnakeBoardBehaviour : Behaviour
 
 	private void CreateBox(string name, Vector3 position, Vector3 scale, Color color)
 	{
-		GameObject item = GameObject.Create(name);
+		GameObject item = GameObject.CreatePrimitive();
+		item.Name = name;
 		item.Parent = GameObject;
 		item.Transform.LocalPosition = position;
 		item.Transform.LocalScale = scale;
-		item.AddComponent<BoxRenderComponent>().Color = color;
+		var material = item.GetComponent<MeshRendererComponent>()!.Material!;
+		material.Color = color.ToLinear();
+		ownedMaterials.Add(material);
 	}
+	public override void OnDestroy()
+	{
+		foreach (var material in ownedMaterials) if (material.IsValid) material.Destroy();
+		ownedMaterials.Clear();
+	}
+
 }

@@ -47,3 +47,9 @@ Snake 使用方向键或 WASD 转向，`P` 暂停/继续，空格重新开始。
 所有项目路径都通过 `--project` 指定。运行 Editor 时，先在 Project 面板打开 Scene，点击 Run/Stop 可在临时运行场景与编辑场景之间切换。
 
 启动 Player 前执行 `Engine/Build/Editor/Debug/UrsaAssetImport.exe --project Demo --configuration Debug`；Editor 的 `--project Demo` 会自动准备资源。内容构建使用 `UrsaPak --project-root Demo --configuration Debug --output Demo/Build/Content.pak`。
+
+## 网格组件
+
+Demo 使用 `GameObject.CreatePrimitive(PrimitiveType.Cube)` 或 MeshFilter + MeshRenderer 组合。棋盘、蛇身和食物共享引擎内置 Cube 几何，颜色写入并缓存独立 Material，在对象移除或停止游戏时显式释放。原来 BoxRender 的展示颜色通过 `Color.ToLinear()` 保持显示效果；材质展示保留 Checker、Ceramic、Gold 的原资产 GUID。
+
+迁移旧副本时先运行 Engine 的 `UrsaMeshMigrate --project <项目目录>`，再显式导入当前配置内容。导入产生的 Mesh、材质、托管程序集和缓存仍位于项目 Library，普通构建不触发资源导入。

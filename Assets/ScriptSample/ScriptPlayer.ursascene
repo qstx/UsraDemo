@@ -52,21 +52,36 @@
       "components": [
         {
           "data": {
-            "color": [
-              1.0,
-              1.0,
-              1.0,
-              1.0
-            ],
-            "material": {
-              "guid": "66666666-6666-4666-8666-666666666666",
-              "localFileId": 0
+            "instantiated": false,
+            "mesh": {
+              "asset": {
+                "guid": "20000000-0000-4000-8000-000000000001",
+                "localFileId": 0
+              },
+              "kind": "asset"
             }
           },
           "enabled": true,
-          "id": "8efa36a6-bd55-4696-a088-7c5f6c25c85a",
-          "type": "ursa.BoxRender",
+          "id": "29fb36a6-bd55-4696-a088-7c5f6c25c807",
+          "type": "ursa.MeshFilter",
           "version": 1
+        },
+        {
+          "data": {
+            "materials": [
+              {
+                "instantiated": false,
+                "value": {
+                  "id": "29f836a6-bd55-4696-a088-7c5f6c25c807",
+                  "kind": "local"
+                }
+              }
+            ]
+          },
+          "enabled": true,
+          "id": "8efa36a6-bd55-4696-a088-7c5f6c25c85a",
+          "type": "ursa.MeshRenderer",
+          "version": 2
         }
       ],
       "enabled": true,
@@ -152,6 +167,69 @@
     }
   ],
   "id": "44444444-4444-4444-8444-444444444444",
+  "localResourceVersion": 1,
+  "localResources": [
+    {
+      "data": {
+        "keywords": [],
+        "parameters": {
+          "alphaCutoff": 0.5,
+          "alphaMode": "Opaque",
+          "baseColor": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "sampler": {
+            "linear": true,
+            "repeat": true
+          }
+        },
+        "propertyOverrides": {
+          "_AlphaCutoff": {
+            "float": 0.5,
+            "type": "Range"
+          },
+          "_AlphaMode": {
+            "int": 0,
+            "type": "Int"
+          },
+          "_BaseColor": {
+            "type": "Color",
+            "vector": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "_MainTex": {
+            "textureId": {
+              "guid": "55555555-5555-4555-8555-555555555555",
+              "localFileId": 0
+            },
+            "type": "Texture2D"
+          }
+        },
+        "samplerOverridden": false,
+        "shaderId": {
+          "guid": "10000000-0000-4000-8000-000000000001",
+          "localFileId": 0
+        },
+        "textures": {
+          "baseColor": {
+            "guid": "55555555-5555-4555-8555-555555555555",
+            "localFileId": 0
+          }
+        },
+        "type": "Unlit"
+      },
+      "id": "29f836a6-bd55-4696-a088-7c5f6c25c807",
+      "type": "ursa.Material",
+      "version": 1
+    }
+  ],
   "sceneGraphVersion": 2,
   "version": 1
 }

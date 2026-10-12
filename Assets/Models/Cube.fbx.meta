@@ -2,7 +2,7 @@
   "folder": false,
   "guid": "81bda3ba-7c33-49d7-9788-ae9bd10d6b2a",
   "importer": "ursa.Model",
-  "importerVersion": 4,
+  "importerVersion": 5,
   "settings": {
     "flipUvs": false,
     "generateNormals": true,

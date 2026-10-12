@@ -1,6 +1,14 @@
 {
   "activeCamera": "75727361-0000-0000-0200-000000000104",
-  "ambient": {"color": [1.0, 1.0, 1.0, 1.0], "intensity": 0.1},
+  "ambient": {
+    "color": [
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "intensity": 0.1
+  },
   "format": "UrsaScene",
   "gameObjects": [
     {
@@ -8,7 +16,12 @@
         {
           "data": {
             "scriptPayload": {
-              "Fields": {"height": 4, "seed": 1, "smokeGameplay": true, "width": 4},
+              "Fields": {
+                "height": 4,
+                "seed": 1,
+                "smokeGameplay": true,
+                "width": 4
+              },
               "FormatVersion": 1,
               "LocalFileId": 4788986422269556870,
               "ScriptType": "demo.snake-controller",
@@ -25,14 +38,35 @@
       ],
       "enabled": true,
       "id": "75727361-0000-0000-0100-000000000001",
-      "localTransform": {"position": [0.0, 0.0, 0.0], "rotation": [0.0, 0.0, 0.0, 1.0], "scale": [1.0, 1.0, 1.0]},
+      "localTransform": {
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
       "name": "Snake Game",
       "parentId": null
     },
     {
       "components": [
         {
-          "data": {"farPlane": 100.0, "nearPlane": 0.1, "verticalFovRadians": 0.7853981852531433},
+          "data": {
+            "farPlane": 100.0,
+            "nearPlane": 0.1,
+            "verticalFovRadians": 0.7853981852531433
+          },
           "enabled": true,
           "id": "75727361-0000-0000-0200-000000000104",
           "type": "ursa.Camera",
@@ -41,13 +75,42 @@
       ],
       "enabled": true,
       "id": "75727361-0000-0000-0100-000000000104",
-      "localTransform": {"position": [0.0, 14.4, 18.4], "rotation": [-0.325956285, 0.0, 0.0, 0.94538486], "scale": [1.0, 1.0, 1.0]},
+      "localTransform": {
+        "position": [
+          0.0,
+          14.4,
+          18.4
+        ],
+        "rotation": [
+          -0.325956285,
+          0.0,
+          0.0,
+          0.94538486
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
       "name": "Game Camera",
       "parentId": "75727361-0000-0000-0100-000000000001"
     }
   ],
   "id": "9bf784f0-7489-4622-9ce5-334ae31c0fd3",
-  "instances": [{"id": "75727361-0000-0000-0300-000000000003", "overrides": {}, "parentId": "75727361-0000-0000-0100-000000000001", "prefab": {"guid": "75727361-0000-0000-0300-000000000001", "localFileId": 0}}],
+  "instances": [
+    {
+      "id": "75727361-0000-0000-0300-000000000003",
+      "overrides": {},
+      "parentId": "75727361-0000-0000-0100-000000000001",
+      "prefab": {
+        "guid": "75727361-0000-0000-0300-000000000001",
+        "localFileId": 0
+      }
+    }
+  ],
+  "localResourceVersion": 1,
+  "localResources": [],
   "sceneGraphVersion": 2,
   "version": 1
 }

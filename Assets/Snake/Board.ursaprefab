@@ -6,7 +6,10 @@
         {
           "data": {
             "scriptPayload": {
-              "Fields": {"height": 16, "width": 16},
+              "Fields": {
+                "height": 16,
+                "width": 16
+              },
               "FormatVersion": 1,
               "LocalFileId": 5986131520760667172,
               "ScriptType": "demo.snake-board",
@@ -23,12 +26,31 @@
       ],
       "enabled": true,
       "id": "75727361-0000-0000-0100-000000000002",
-      "localTransform": {"position": [0, 0, 0], "rotation": [0, 0, 0, 1], "scale": [1, 1, 1]},
+      "localTransform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
       "name": "Board",
       "parentId": null
     }
   ],
   "id": "75727361-0000-0000-0300-000000000001",
+  "localResourceVersion": 1,
+  "localResources": [],
   "prefabGraphVersion": 2,
   "version": 1
 }
