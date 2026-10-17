@@ -1,8 +1,21 @@
 {
-  "version": 1,
   "folder": false,
   "guid": "891af7c9-63d6-4957-9a16-463f828a416a",
   "importer": "",
   "importerVersion": 0,
-  "settings": {}
+  "scriptTypes": {
+    "Types": [
+      {
+        "Id": "demo.multi-camera-showcase",
+        "LocalFileId": 2666653143220842310,
+        "Primary": true,
+        "TypeName": "Ursa.Demo.Rendering.MultiCameraShowcase",
+        "Version": 1,
+        "Legacy": true
+      }
+    ],
+    "Version": 1
+  },
+  "settings": {},
+  "version": 1
 }

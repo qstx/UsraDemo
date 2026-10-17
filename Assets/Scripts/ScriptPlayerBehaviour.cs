@@ -1,6 +1,4 @@
 using Ursa;
-
-[UrsaScriptType("demo.script-player", Version = 1)]
 public sealed class ScriptPlayerBehaviour : Behaviour
 {
 	public AssetReference texture;

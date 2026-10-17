@@ -1,6 +1,4 @@
 using Ursa;
-
-[UrsaScriptType("demo.material-showcase", Version = 1)]
 public sealed class MaterialShowcaseBehaviour : Behaviour
 {
 	private readonly System.Collections.Generic.List<Material> ownedMaterials = new();

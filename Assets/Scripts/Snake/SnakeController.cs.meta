@@ -3,6 +3,27 @@
   "guid": "7f6ce254-214b-45bb-afa8-e3bb99f58c88",
   "importer": "",
   "importerVersion": 0,
+  "scriptTypes": {
+    "Types": [
+      {
+        "Id": "demo.snake-board",
+        "LocalFileId": 5986131520760667172,
+        "Primary": false,
+        "TypeName": "Ursa.Demo.SnakeBoardBehaviour",
+        "Version": 1,
+        "Legacy": true
+      },
+      {
+        "Id": "demo.snake-controller",
+        "LocalFileId": 4788986422269556870,
+        "Primary": true,
+        "TypeName": "Ursa.Demo.SnakeController",
+        "Version": 1,
+        "Legacy": true
+      }
+    ],
+    "Version": 1
+  },
   "settings": {},
   "version": 1
 }

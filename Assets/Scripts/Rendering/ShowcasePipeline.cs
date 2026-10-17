@@ -5,8 +5,6 @@ using Ursa.Rendering;
 using Camera = Ursa.Rendering.Camera;
 
 namespace Ursa.Demo.Rendering;
-
-[UrsaScriptType("demo.showcase-pipeline", Version = 1)]
 [CreateAssetMenu(MenuName = "Rendering/Demo Showcase Pipeline", FileName = "ShowcasePipeline", Order = 10)]
 public sealed class ShowcasePipelineAsset : RenderPipelineAsset
 {

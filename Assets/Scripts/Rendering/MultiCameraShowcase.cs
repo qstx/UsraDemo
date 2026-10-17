@@ -4,7 +4,6 @@ using Ursa;
 namespace Ursa.Demo.Rendering;
 
 // Attach to the existing Game camera to compare two independent half-window views in Play.
-[UrsaScriptType("demo.multi-camera-showcase", Version = 1)]
 public sealed class MultiCameraShowcase : Behaviour
 {
 	private GameObject? secondary;

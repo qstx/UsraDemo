@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 
 namespace Ursa.Demo;
-
-[UrsaScriptType("demo.snake-controller", Version = 1)]
 public sealed class SnakeController : Behaviour
 {
 	public int width = 16;
@@ -211,8 +209,6 @@ public sealed class SnakeController : Behaviour
 		}
 	}
 }
-
-[UrsaScriptType("demo.snake-board", Version = 1)]
 public sealed class SnakeBoardBehaviour : Behaviour
 {
 	private readonly List<Material> ownedMaterials = new();
