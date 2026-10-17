@@ -10,7 +10,7 @@ public sealed class MoveWithInputInspector : Inspector
 		EditorGui.PropertyField(step, "Step");
 		if (EditorGui.Button("Reset Step"))
 		{
-			step.SetValue(1.0);
+			step.DoubleValue = 1.0;
 		}
 		SerializedObject.ApplyModifiedProperties();
 	}
@@ -21,7 +21,7 @@ public static class DemoEditorMenus
 	[MenuItem("Tools/Demo/Save Current Asset")]
 	private static void SaveCurrentAsset()
 	{
-		if (EditorContext.Document.ValueKind != System.Text.Json.JsonValueKind.Null)
+		if (EditorContext.Document != null)
 		{
 			EditorContext.Save();
 		}
@@ -35,10 +35,10 @@ public sealed class ProjectOverviewWindow : EditorWindow
 
 	public override void OnGUI()
 	{
-		EditorGui.Text("Assets: " + EditorContext.Assets.GetArrayLength());
-		foreach (var selected in EditorContext.Selection.EnumerateArray())
+		EditorGui.Text("Assets: " + EditorContext.Assets.Length);
+		foreach (var selected in EditorContext.Selection)
 		{
-			EditorGui.Text(selected.GetProperty("Name").GetString() ?? "");
+			EditorGui.Text(selected.Name);
 		}
 	}
 }

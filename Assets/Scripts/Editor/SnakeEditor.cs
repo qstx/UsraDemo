@@ -1,5 +1,4 @@
 using System;
-using System.Text.Json;
 using Ursa.Editor;
 
 [CustomInspector("demo.snake-controller")]
@@ -33,7 +32,7 @@ public static class SnakeEditorMenus
 	[MenuItem("Tools/Snake/Save Current Scene")]
 	private static void SaveCurrentScene()
 	{
-		if (EditorContext.Document.ValueKind != JsonValueKind.Null)
+		if (EditorContext.Document != null)
 		{
 			EditorContext.Save();
 		}
