@@ -1,28 +1,31 @@
 using System;
 using Ursa.Editor;
+using Ursa.Demo;
 
-[CustomInspector("demo.snake-controller")]
+[CustomEditor(typeof(SnakeController))]
 public sealed class SnakeControllerInspector : Inspector
 {
 	public override void OnInspectorGUI()
 	{
+		SerializedObject.Update();
 		EditorGui.Text("平面网格移动，3D 视角呈现。");
-		EditorGui.PropertyField(SerializedObject.FindProperty("/Fields/width"), "棋盘宽度");
-		EditorGui.PropertyField(SerializedObject.FindProperty("/Fields/height"), "棋盘高度");
-		EditorGui.PropertyField(SerializedObject.FindProperty("/Fields/seed"), "随机种子");
-		EditorGui.PropertyField(SerializedObject.FindProperty("/Fields/smokeGameplay"), "自动冒烟流程");
+		EditorGui.PropertyField(SerializedObject.FindProperty("width"), "棋盘宽度");
+		EditorGui.PropertyField(SerializedObject.FindProperty("height"), "棋盘高度");
+		EditorGui.PropertyField(SerializedObject.FindProperty("seed"), "随机种子");
+		EditorGui.PropertyField(SerializedObject.FindProperty("smokeGameplay"), "自动冒烟流程");
 		SerializedObject.ApplyModifiedProperties();
 	}
 }
 
-[CustomInspector("demo.snake-board")]
+[CustomEditor(typeof(SnakeBoardBehaviour))]
 public sealed class SnakeBoardInspector : Inspector
 {
 	public override void OnInspectorGUI()
 	{
+		SerializedObject.Update();
 		EditorGui.Text("棋盘格由 C# Prefab 行为生成。");
-		EditorGui.PropertyField(SerializedObject.FindProperty("/Fields/width"), "棋盘宽度");
-		EditorGui.PropertyField(SerializedObject.FindProperty("/Fields/height"), "棋盘高度");
+		EditorGui.PropertyField(SerializedObject.FindProperty("width"), "棋盘宽度");
+		EditorGui.PropertyField(SerializedObject.FindProperty("height"), "棋盘高度");
 		SerializedObject.ApplyModifiedProperties();
 	}
 }

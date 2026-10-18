@@ -1,12 +1,12 @@
 using Ursa.Editor;
 
-[CustomInspector("demo.move-with-input")]
+[CustomEditor(typeof(MoveWithInputBehaviour))]
 public sealed class MoveWithInputInspector : Inspector
 {
 	public override void OnInspectorGUI()
 	{
 		EditorGui.Text("Right Arrow moves this object.");
-		var step = SerializedObject.FindProperty("/Fields/step");
+		var step = SerializedObject.FindProperty("step");
 		EditorGui.PropertyField(step, "Step");
 		if (EditorGui.Button("Reset Step"))
 		{
