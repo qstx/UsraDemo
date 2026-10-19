@@ -1,7 +1,7 @@
-# Demo 资源
+# 贪吃蛇资源
 
-此目录是 Demo 项目的可写资源根，挂载为 `prj:`。Editor 创建的 Scene、Prefab、材质、纹理和导入资源都保存在这里。Engine 内置资源从相邻的 Engine 仓库以只读 `ursa:` 挂载访问。
+此目录仅保存贪吃蛇源资源，挂载为可写的 `prj:`。引擎内置 Cube 和 Shader 通过只读的 `ursa:` 引用。
 
-`Snake/Snake.ursascene` 引用 `Snake/Board.ursaprefab`。Prefab 上的 `SnakeBoardBehaviour` 用 C# 创建棋盘底座和格子；Scene 上的 `SnakeController` 负责规则、输入、蛇身和食物。使用通用 `UrsaEditor --project Demo --scene Snake/Snake.ursascene` 编辑，或用 `UrsaScriptPlayer` 独立运行。
+`Snake/Snake.ursascene` 引用静态 `Snake/Board.ursaprefab`，场景内直接保存相机、初始蛇身、食物、蛇身对象池及材质。编辑状态即可观察与调整完整画面；进入游戏后脚本只更新已有对象的位置及显隐，不动态生成场景。
 
-`MaterialShowcase.ursascene` 演示 Unlit 与 PBR 材质。项目运行脚本和 Editor 扩展位于 `Scripts/`；编译项目、导入缓存和生成文件放在 `Library/`，不要放进此资源目录。
+C# 源码位于 `Scripts/Snake/`，编辑器工具位于 `Scripts/Editor/`。生成程序集、导入产物和缓存均放在项目 `Library/`。

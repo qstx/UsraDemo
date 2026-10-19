@@ -1,7 +1,7 @@
 using System;
-using System.Collections.Generic;
 
 namespace Ursa.Demo;
+
 public sealed class SnakeController : Behaviour
 {
 	public int width = 16;
@@ -9,14 +9,14 @@ public sealed class SnakeController : Behaviour
 	public uint seed = 1;
 	public bool smokeGameplay;
 
-	private readonly List<GameObject> segments = new();
-	private readonly Dictionary<GameObject, Material> ownedMaterials = new();
+	public GameObject[] segmentObjects = Array.Empty<GameObject>();
+	public GameObject? foodObject;
 	private SnakeGame? game;
 	private SnakeFixedStepClock clock = new();
-	private GameObject? foodObject;
 	private bool paused;
 	private ulong lastTitleFrame;
 	private ulong smokeFrame;
+	private int visibleSegmentCount;
 
 	public override void Awake()
 	{
@@ -30,6 +30,14 @@ public sealed class SnakeController : Behaviour
 		else
 		{
 			game = new SnakeGame(width, height, seed);
+		}
+		if (segmentObjects.Length < width * height || foodObject == null)
+		{
+			throw new InvalidOperationException("Snake scene must contain a food object and one segment object per board cell.");
+		}
+		foreach (GameObject segment in segmentObjects)
+		{
+			segment.ActiveSelf = false;
 		}
 		SyncPresentation();
 	}
@@ -93,63 +101,28 @@ public sealed class SnakeController : Behaviour
 		{
 			return;
 		}
-		while (segments.Count > game.Body.Count)
+		while (visibleSegmentCount < game.Body.Count)
 		{
-			ReleaseBox(segments[^1]);
-			segments.RemoveAt(segments.Count - 1);
+			segmentObjects[visibleSegmentCount++].ActiveSelf = true;
 		}
-		while (segments.Count < game.Body.Count)
+		while (visibleSegmentCount > game.Body.Count)
 		{
-			segments.Add(CreateBox("Snake Segment", GameObject, default, new Vector3(0.84f, 0.84f, 0.84f),
-				segments.Count == 0 ? new Color(0.35f, 0.95f, 0.5f) : new Color(0.12f, 0.65f, 0.42f)));
+			segmentObjects[--visibleSegmentCount].ActiveSelf = false;
 		}
 		float xOffset = (game.Width - 1) * 0.5f;
 		float zOffset = (game.Height - 1) * 0.5f;
 		for (int index = 0; index < game.Body.Count; ++index)
 		{
 			SnakeCell cell = game.Body[index];
-			GameObject segment = segments[index];
+			GameObject segment = segmentObjects[index];
 			segment.Transform.LocalPosition = new Vector3(cell.X - xOffset, 0.34f, cell.Z - zOffset);
-
 		}
-		if (!game.Food.HasValue)
+		foodObject!.ActiveSelf = game.Food.HasValue;
+		if (game.Food.HasValue)
 		{
-			if (foodObject != null) ReleaseBox(foodObject);
-			foodObject = null;
-			return;
+			SnakeCell food = game.Food.Value;
+			foodObject.Transform.LocalPosition = new Vector3(food.X - xOffset, 0.28f, food.Z - zOffset);
 		}
-		if (foodObject == null)
-		{
-			foodObject = CreateBox("Food", GameObject, default, new Vector3(0.55f, 0.55f, 0.55f),
-				new Color(1.0f, 0.45f, 0.12f));
-		}
-		SnakeCell food = game.Food.Value;
-		foodObject.Transform.LocalPosition = new Vector3(food.X - xOffset, 0.28f, food.Z - zOffset);
-	}
-
-	private GameObject CreateBox(string name, GameObject parent, Vector3 position, Vector3 scale, Color color)
-	{
-		GameObject item = GameObject.CreatePrimitive();
-		item.Name = name;
-		item.Parent = parent;
-		item.Transform.LocalPosition = position;
-		item.Transform.LocalScale = scale;
-		var material = item.GetComponent<MeshRendererComponent>()!.Material!;
-		material.Color = color.ToLinear();
-		ownedMaterials.Add(item, material);
-		return item;
-	}
-
-	private void ReleaseBox(GameObject item)
-	{
-		item.Destroy();
-		if (ownedMaterials.Remove(item, out var material) && material.IsValid) material.Destroy();
-	}
-
-	public override void OnDestroy()
-	{
-		foreach (var material in ownedMaterials.Values) if (material.IsValid) material.Destroy();
-		ownedMaterials.Clear();
 	}
 
 	private void UpdateTitle()
@@ -208,45 +181,4 @@ public sealed class SnakeController : Behaviour
 			}
 		}
 	}
-}
-public sealed class SnakeBoardBehaviour : Behaviour
-{
-	private readonly List<Material> ownedMaterials = new();
-	public int width = 16;
-	public int height = 16;
-
-	public override void Awake()
-	{
-		CreateBox("Board Base", new Vector3(0, -0.42f, 0),
-			new Vector3(width + 0.35f, 0.3f, height + 0.35f), new Color(0.12f, 0.18f, 0.23f));
-		float xOffset = (width - 1) * 0.5f;
-		float zOffset = (height - 1) * 0.5f;
-		for (int z = 0; z < height; ++z)
-		{
-			for (int x = 0; x < width; ++x)
-			{
-				float shade = (x + z) % 2 == 0 ? 0.25f : 0.31f;
-				CreateBox($"Tile ({x}, {z})", new Vector3(x - xOffset, -0.22f, z - zOffset),
-					new Vector3(0.96f, 0.08f, 0.96f), new Color(shade * 0.55f, shade, shade * 0.75f));
-			}
-		}
-	}
-
-	private void CreateBox(string name, Vector3 position, Vector3 scale, Color color)
-	{
-		GameObject item = GameObject.CreatePrimitive();
-		item.Name = name;
-		item.Parent = GameObject;
-		item.Transform.LocalPosition = position;
-		item.Transform.LocalScale = scale;
-		var material = item.GetComponent<MeshRendererComponent>()!.Material!;
-		material.Color = color.ToLinear();
-		ownedMaterials.Add(material);
-	}
-	public override void OnDestroy()
-	{
-		foreach (var material in ownedMaterials) if (material.IsValid) material.Destroy();
-		ownedMaterials.Clear();
-	}
-
 }

@@ -6,14 +6,6 @@
   "scriptTypes": {
     "Types": [
       {
-        "Id": "demo.snake-board",
-        "LocalFileId": 5986131520760667172,
-        "Primary": false,
-        "TypeName": "Ursa.Demo.SnakeBoardBehaviour",
-        "Version": 1,
-        "Legacy": true
-      },
-      {
         "Id": "demo.snake-controller",
         "LocalFileId": 4788986422269556870,
         "Primary": true,
