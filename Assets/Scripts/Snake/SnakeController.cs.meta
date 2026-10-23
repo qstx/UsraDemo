@@ -7,11 +7,11 @@
     "Types": [
       {
         "Id": "demo.snake-controller",
+        "Legacy": false,
         "LocalFileId": 4788986422269556870,
         "Primary": true,
         "TypeName": "Ursa.Demo.SnakeController",
-        "Version": 1,
-        "Legacy": true
+        "Version": 1
       }
     ],
     "Version": 1
